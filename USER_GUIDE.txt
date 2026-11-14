@@ -1,4 +1,4 @@
-AirBubble - version 1.7.0
+AirBubble - version 1.7.1
 =========================
 
 Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses plugged straight into a Windows PC.
@@ -39,7 +39,7 @@ YOUR SCREENS IN AR
   - Drag the left, right or bottom EDGE (it glows blue) to resize.
   - Title bar buttons: padlock = lock in place, - minimize, square maximize, X close.
   - Look down for the DOCK: "+ New screen", Arrange, Recenter, Settings, and minimized screens.
-  - All AR screens are extra Windows displays (up to 4) from the bundled virtual display driver; the PC's own
+  - All AR screens are extra Windows displays (up to 8) from the bundled virtual display driver; the PC's own
     screen is not mirrored (Settings can add it). While the viewer runs, the main AR screen is the Windows primary
     display (taskbar, Start, new windows), and open windows are moved onto it. Closing a screen moves its windows
     to your other screens. Screen positions are remembered. Everything is put back when you quit.

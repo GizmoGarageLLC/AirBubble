@@ -1,8 +1,8 @@
 # AirBubble
 
-**Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses.** v1.7.0
+**Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses.** v1.7.1
 
-Plug your XREAL Air straight into a Windows PC and your desktop turns into a room full of screens. Up to four
+Plug your XREAL Air straight into a Windows PC and your desktop turns into a room full of screens. Up to eight
 full Windows displays float around you, stay put when you turn your head, and work like windows: move them,
 resize them, push them away or pull them closer. Bubble, a little 16-bit buddy with a big toothy grin, floats
 next to them and helps out when you call his name.
@@ -16,7 +16,7 @@ No phone, no Beam, no Unity, no XREAL SDK. Just the glasses, a USB-C cable and y
 
 ## Features
 
-- **Screens that float.** Every AR screen is a real Windows display. Drag a title bar to move it, roll the wheel
+- **Screens that float.** Up to eight, and every AR screen is a real Windows display. Drag a title bar to move it, roll the wheel
   to push or pull, drag an edge to resize, and use lock / minimize / maximize / close just like a normal window.
 - **Head tracking.** 1000 Hz sensor tracking keeps screens still while you look around. Drift is learnt while you
   hold still and remembered between sessions.
@@ -71,6 +71,10 @@ to calibrate: move the red (left eye) and green (right eye) lines until they mer
 2. Plug in the glasses and start **AirBubble** from the Start menu.
 3. Hold your head still for about 2 seconds while it calibrates. Your screens appear in front of you.
 
+Press `Ctrl+Alt+N` (or **+ New screen** in the dock) for more screens, up to eight. Every screen is captured and
+drawn live, so on integrated graphics (Intel UHD and similar) many screens showing video at once can get choppy;
+minimized screens cost almost nothing.
+
 `Ctrl+Alt+G` gives the mouse back to the normal desktop at any time. `Ctrl+Alt+Q` quits and puts your
 displays back the way they were.
 
@@ -112,8 +116,10 @@ Full end-user guide: [USER_GUIDE.txt](USER_GUIDE.txt) (shipped with the installe
 
 - Per-user install to `%LOCALAPPDATA%\Programs\AirBubble`: Start menu shortcut, optional desktop shortcut,
   optional start-with-Windows (tray icon waits until the glasses are plugged in), entry in Settings › Apps.
-- Installs the bundled **Virtual Display Driver** (one admin prompt) with a pool of 4 virtual screens. Uninstall
-  removes it again, but only if this installer put it there.
+- Installs the bundled **Virtual Display Driver** (one admin prompt) with a pool of 8 virtual screens. Uninstall
+  removes it again, but only if this installer put it there. Updating an install with fewer screens (4 up to 1.7.0)
+  raises the pool to 8: one admin prompt, then the driver restarts (`Uninstall.exe /setscreens <n>`, 1-8, also
+  works on its own from an elevated prompt). The pool size is `Product.VirtualScreens` in `Installer\Setup.cs`.
 - Silent: `AirBubbleSetup.exe /S [/desktop] [/noautostart] [/launch] [/nodriver] [/nouac] [/dir=PATH]`;
   `Uninstall.exe /uninstall /S [/keepsettings] [/keepdriver]`.
 - Signed + timestamped with a **self-signed** certificate (`Installer\signing\`): proves the files weren't altered,
@@ -149,7 +155,7 @@ or future builds will carry a different publisher. Without the certificate, buil
 | Area | Implementation |
 |---|---|
 | Display | Glasses detected by EDID maker `MRG`; Windows switched to Extend; desktop arranged atomically with the CCD API (`DisplayConfig.cs`): `[PC screen] [main AR screen = primary at 0,0] [glasses] [other AR screens]`; everything restored on exit |
-| Virtual screens | Bundled MIT Virtual Display Driver (EDID `MTT1337`), fixed pool of 4; showing/closing a screen = attaching/detaching that monitor (no driver reload) |
+| Virtual screens | Bundled MIT Virtual Display Driver (EDID `MTT1337`), fixed pool of 8 (config `%ProgramData%\XrealPcViewer\VirtualDisplayDriver\vdd_settings.xml`); showing/closing a screen = attaching/detaching that monitor (no driver reload) |
 | Head tracking | 1000 Hz IMU over USB HID; Mahony filter (gravity levels pitch/roll); gyro bias learnt only from provably-still 1 s blocks, median of recent blocks, temperature slope, saved between sessions (`imu_bias.ini`) |
 | Drift | No usable absolute yaw reference on the Air (magnetometer measured: unusable). Residual drift absorbed by "keep the main screen centred" — ≤3°/min, only while gazing at the main screen |
 | Capture | DXGI Desktop Duplication per screen; zero-copy hand-off; frames queued with Windows' present timestamps and shown a fixed delay later (even video cadence) |

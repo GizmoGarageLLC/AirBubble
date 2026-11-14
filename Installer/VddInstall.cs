@@ -36,7 +36,54 @@ namespace XrealDesktop.Setup
         [DllImport("newdev.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         static extern bool UpdateDriverForPlugAndPlayDevices(IntPtr hwnd, string hwid, string inf, int flags, out bool reboot);
 
+        [StructLayout(LayoutKind.Sequential)]
+        struct SP_PROPCHANGE_PARAMS { public int HeaderSize; public int InstallFunction; public int StateChange; public int Scope; public int HwProfile; }
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiSetClassInstallParams(IntPtr set, ref SP_DEVINFO_DATA d, ref SP_PROPCHANGE_PARAMS p, int size);
+
         const int SPDRP_HARDWAREID = 1, DIF_REGISTERDEVICE = 0x19, DIF_REMOVE = 5, DICD_GENERATE_ID = 1, INSTALLFLAG_FORCE = 1;
+        const int DIF_PROPERTYCHANGE = 0x12, DICS_PROPCHANGE = 3, DICS_FLAG_GLOBAL = 1;
+        public const int MaxScreens = 8;
+
+        /// <summary>Number of virtual screens in our driver config, or -1 if there is no config of ours.</summary>
+        public static int ConfiguredCount()
+        {
+            try
+            {
+                var m = Regex.Match(File.ReadAllText(Path.Combine(ConfigDir, "vdd_settings.xml")), @"<count>\s*(\d+)\s*</count>");
+                return m.Success ? int.Parse(m.Groups[1].Value) : -1;
+            }
+            catch { return -1; }
+        }
+
+        /// <summary>
+        /// Changes the number of virtual screens of an installed driver: rewrites our config and restarts the device so the
+        /// driver re-reads it (all virtual screens blink off and on). Must run elevated. Returns "" or an error.
+        /// </summary>
+        public static string SetScreens(int monitors, Action<string> log)
+        {
+            monitors = Math.Max(1, Math.Min(MaxScreens, monitors));
+            string cfg = Path.Combine(ConfigDir, "vdd_settings.xml");
+            if (!File.Exists(cfg)) return "no driver config at " + cfg;
+            string xml = File.ReadAllText(cfg);
+            File.WriteAllText(cfg, Regex.Replace(xml, @"<count>\s*\d+\s*</count>", "<count>" + monitors + "</count>"));
+            log("Virtual display config: " + monitors + " screens");
+            string err = "";
+            int restarted = 0;
+            ForEachDevice((set, d) =>
+            {
+                var p = new SP_PROPCHANGE_PARAMS { HeaderSize = 8, InstallFunction = DIF_PROPERTYCHANGE, StateChange = DICS_PROPCHANGE, Scope = DICS_FLAG_GLOBAL };
+                var dd = d;
+                if (!SetupDiSetClassInstallParams(set, ref dd, ref p, Marshal.SizeOf(typeof(SP_PROPCHANGE_PARAMS))) ||
+                    !SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, set, ref dd))
+                    err = "device restart failed (" + Marshal.GetLastWin32Error() + ")";
+                else restarted++;
+                return true;
+            });
+            if (err.Length == 0 && restarted == 0) err = "virtual display device not found";
+            if (err.Length == 0) log("Virtual display device restarted");
+            return err;
+        }
 
         /// <summary>True if a device with our hardware ID exists (installed by us or by the driver's own app).</summary>
         public static bool IsInstalled() { bool found = false; ForEachDevice((set, d) => { found = true; return false; }); return found; }
@@ -69,7 +116,7 @@ namespace XrealDesktop.Setup
             // 1) Config: our own folder (readable by the driver host), pointed to via the driver's VDDPATH registry value.
             Directory.CreateDirectory(ConfigDir);
             string xml = File.ReadAllText(Path.Combine(packageDir, "vdd_settings.xml"));
-            xml = Regex.Replace(xml, @"<count>\s*\d+\s*</count>", "<count>" + Math.Max(1, Math.Min(8, monitors)) + "</count>");
+            xml = Regex.Replace(xml, @"<count>\s*\d+\s*</count>", "<count>" + Math.Max(1, Math.Min(MaxScreens, monitors)) + "</count>");
             File.WriteAllText(Path.Combine(ConfigDir, "vdd_settings.xml"), xml);
             using (var k = Registry.LocalMachine.CreateSubKey(VddRegKey)) k.SetValue("VDDPATH", ConfigDir);
             log("Virtual display config: " + monitors + " screens");

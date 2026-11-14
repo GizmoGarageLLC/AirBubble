@@ -1,8 +1,8 @@
-AirBubble - version 1.7.0
+AirBubble - version 1.7.1
 =========================
 
-File:      AirBubbleSetup.exe (700,936 bytes)
-SHA-256:   73B9AB240EAFEFF59D8EBB0FD090771E3DF9FE49761D798F494331F46B8232E4
+File:      AirBubbleSetup.exe (704,008 bytes)
+SHA-256:   60AD4E728C59AACF5843B19326DDE8C07885283CDF1BEDB74B3FCCA53C85D6D0
 Signed by: CN=PC Viewer for XREAL glasses (independent build), O=Self-signed
            (self-signed code-signing certificate, thumbprint 9B59D20322D5C17AF5297F692E4B1EB5D6BAFAEF, valid until 2031-11-11)
 
@@ -22,6 +22,16 @@ ABOUT THE SIGNATURE (please read)
   certificate (or free open-source signing such as SignPath Foundation) removes that everywhere.
   On PCs you own you can make Windows trust it: run Trust-Publisher.cmd once (admin). Undo: Trust-Publisher.cmd remove
   Microsoft Defender scan of the installer, the app and the driver: no threats found.
+
+WHAT'S NEW IN 1.7.1
+  - Up to 8 floating screens (was 4). Press Ctrl+Alt+N or "+ New screen" in the dock for each one.
+  - Updating from an older version asks for admin once to raise the virtual screens driver from 4 to 8 screens;
+    all virtual screens blink while the driver restarts. Screens that were open reopen as new screens once (the
+    driver gives them new Windows names), so press Ctrl+Alt+N to bring extra ones back. Your settings stay.
+  - Every screen is captured and drawn live: on integrated graphics, many screens playing video at once can get
+    choppy. Minimized screens cost almost nothing.
+  - Uninstall.exe /setscreens <1-8> (elevated) changes the number of virtual screens of an installed driver.
+  Tested: 1.7.0 -> 1.7.1 update on the build PC (driver 4 -> 8 screens, all 8 seen by Windows).
 
 WHAT'S NEW IN 1.7.0
   - New name: "PC Viewer for XREAL glasses" is now AirBubble. The app, Start menu entry, Startup shortcuts,

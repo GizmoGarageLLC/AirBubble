@@ -24,15 +24,15 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("AirBubble")]
 [assembly: System.Reflection.AssemblyCompany("Independent build (not affiliated with XREAL)")]
 [assembly: System.Reflection.AssemblyCopyright("Independent build")]
-[assembly: System.Reflection.AssemblyVersion("1.7.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.7.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.7.0")]
+[assembly: System.Reflection.AssemblyVersion("1.7.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.7.1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.7.1")]
 namespace XrealDesktop.Setup
 {
     static class Product
     {
         public const string Name = "AirBubble";
-        public const string Version = "1.7.0";
+        public const string Version = "1.7.1";
         public const string FolderName = "AirBubble";
         public const string ExeName = "AirBubble.exe";
         public const string UninstallerName = "Uninstall.exe";
@@ -42,7 +42,7 @@ namespace XrealDesktop.Setup
         public static readonly string[] Payload = { "AirBubble.exe", "README.txt" };
         public static readonly string[] DriverPayload = { "MttVDD.dll", "mttvdd.cat", "MttVDD.inf", "vdd_settings.xml", "LICENSE.txt" };
         public const string DriverFolder = "VirtualDisplayDriver";
-        public const int VirtualScreens = 4;
+        public const int VirtualScreens = 8;   // 4 up to 1.7.0; an update raises an older driver config (one admin prompt)
 
         public static string DefaultDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", FolderName); } }
         public static string StartMenuLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), Name + ".lnk"); } }
@@ -197,6 +197,18 @@ namespace XrealDesktop.Setup
                     try { Process.Start(new ProcessStartInfo(exe, "--detach-virtual") { UseShellExecute = false, CreateNoWindow = true }).WaitForExit(15000); } catch { }
                 }
             }
+            else if (o.Driver && NeedsMoreScreens())
+            {
+                log("Adding virtual screens: " + VddInstall.ConfiguredCount() + " to " + Product.VirtualScreens + " (Windows will ask for permission; screens blink once)...");
+                int code = RunElevated(uninst, "/setscreens " + Product.VirtualScreens);
+                if (code == -1223) log("More virtual screens skipped (permission declined). Run setup again to add them.");
+                else if (code != 0) log("Virtual screens could not be added (code " + code + "; details in AirBubble-driver.txt in the TEMP folder).");
+                else
+                {
+                    Thread.Sleep(3000);   // the restarted driver brings its monitors back attached; keep them off until the viewer shows them
+                    try { Process.Start(new ProcessStartInfo(exe, "--detach-virtual") { UseShellExecute = false, CreateNoWindow = true }).WaitForExit(15000); } catch { }
+                }
+            }
             log("Creating shortcuts...");
             CreateShortcut(Product.StartMenuLink, exe, "", o.Dir);
             if (o.Desktop) CreateShortcut(Product.DesktopLink, exe, "", o.Dir);
@@ -233,6 +245,14 @@ namespace XrealDesktop.Setup
                 Process.Start(new ProcessStartInfo(exe, "--autostart") { WorkingDirectory = o.Dir, UseShellExecute = false });
             }
             log("Done.");
+        }
+
+        /// <summary>True if our driver is installed with fewer virtual screens than this version provides.</summary>
+        public static bool NeedsMoreScreens()
+        {
+            if (!VddInstall.IsInstalled() || !VddInstall.InstalledByUs()) return false;
+            int n = VddInstall.ConfiguredCount();
+            return n >= 0 && n < Product.VirtualScreens;
         }
 
         /// <summary>Runs an exe elevated (UAC). Returns its exit code, or -1223 if the user declined.</summary>
@@ -365,7 +385,8 @@ namespace XrealDesktop.Setup
             m_Autostart = new CheckBox { Text = "Start with Windows (waits in the tray; shows your screens when the glasses are plugged in)", AutoSize = true, Location = new Point(20, 266) };
             m_Launch = new CheckBox { Text = "Start the viewer when setup finishes", AutoSize = true, Location = new Point(20, 292), Checked = true };
             m_Driver = new CheckBox { Text = "Install the virtual screens driver (" + Product.VirtualScreens + " extra screens; asks for admin once)", AutoSize = true, Location = new Point(20, 318), Checked = true };
-            if (VddInstall.IsInstalled()) { m_Driver.Text = "Virtual screens driver: already installed"; m_Driver.Checked = false; m_Driver.Enabled = false; }
+            if (Installer.NeedsMoreScreens()) m_Driver.Text = "Add virtual screens: " + VddInstall.ConfiguredCount() + " to " + Product.VirtualScreens + " (asks for admin once)";
+            else if (VddInstall.IsInstalled()) { m_Driver.Text = "Virtual screens driver: already installed"; m_Driver.Checked = false; m_Driver.Enabled = false; }
             m_Uac = new CheckBox { Text = "Show Windows permission (UAC) prompts in the glasses (turns off the dimmed secure desktop)", AutoSize = true, Location = new Point(20, 344), Checked = true };
             if (XrealDesktop.PcViewer.UacPrompts.ShownInGlasses) { m_Uac.Text = "Windows permission (UAC) prompts: already shown in the glasses"; m_Uac.Checked = false; m_Uac.Enabled = false; }
             // on by default; an update keeps what was chosen before (Startup shortcut, or the old registry entry)
@@ -461,6 +482,22 @@ namespace XrealDesktop.Setup
                     return err.Length == 0 ? 0 : 3;
                 }
                 catch (Exception e) { File.WriteAllText(Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt"), e.ToString()); return 4; }
+            }
+            int si = Array.FindIndex(args, a => string.Equals(a, "/setscreens", StringComparison.OrdinalIgnoreCase));
+            if (si >= 0)
+            {
+                // Elevated step: /setscreens <n>  (more or fewer virtual screens for an installed driver)
+                int n; if (si + 1 >= args.Length || !int.TryParse(args[si + 1], out n)) n = Product.VirtualScreens;
+                string logPath = Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt");
+                var lines = new System.Collections.Generic.List<string>();
+                try
+                {
+                    string err = VddInstall.SetScreens(n, s => lines.Add(s));
+                    if (err.Length > 0) lines.Add(err);
+                    File.WriteAllLines(logPath, lines);
+                    return err.Length == 0 ? 0 : 3;
+                }
+                catch (Exception e) { lines.Add(e.ToString()); File.WriteAllLines(logPath, lines); return 4; }
             }
             if (Has(args, "/removedriver"))
             {
