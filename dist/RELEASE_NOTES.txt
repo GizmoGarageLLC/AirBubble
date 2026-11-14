@@ -1,0 +1,187 @@
+AirBubble - version 1.7.0
+=========================
+
+File:      AirBubbleSetup.exe (700,936 bytes)
+SHA-256:   73B9AB240EAFEFF59D8EBB0FD090771E3DF9FE49761D798F494331F46B8232E4
+Signed by: CN=PC Viewer for XREAL glasses (independent build), O=Self-signed
+           (self-signed code-signing certificate, thumbprint 9B59D20322D5C17AF5297F692E4B1EB5D6BAFAEF, valid until 2031-11-11)
+
+INSTALL ON ANY PC
+  Requirements: Windows 10 or 11, 64-bit Intel/AMD (x64); XREAL Air plugged into a USB-C port with video.
+  1. Run AirBubbleSetup.exe. One admin prompt installs the virtual screens driver.
+     If SmartScreen says "Windows protected your PC": click "More info" > "Run anyway".
+  2. Plug in the glasses, start "AirBubble", hold still ~2 s the first time.
+     It starts with Windows from then on (Startup folder) and shows your screens when the glasses are plugged in.
+  Silent install: AirBubbleSetup.exe /S [/desktop] [/noautostart] [/launch] [/nouac]
+  Uninstall: Settings > Apps > "AirBubble" (removes the driver it installed too).
+
+ABOUT THE SIGNATURE (please read)
+  The app and installer are signed and timestamped with a self-signed certificate, so you can verify they
+  haven't been altered (right-click > Properties > Digital Signatures). Windows does not trust self-signed
+  certificates by default, so on a new PC it still shows "unknown publisher"/SmartScreen - only a paid
+  certificate (or free open-source signing such as SignPath Foundation) removes that everywhere.
+  On PCs you own you can make Windows trust it: run Trust-Publisher.cmd once (admin). Undo: Trust-Publisher.cmd remove
+  Microsoft Defender scan of the installer, the app and the driver: no threats found.
+
+WHAT'S NEW IN 1.7.0
+  - New name: "PC Viewer for XREAL glasses" is now AirBubble. The app, Start menu entry, Startup shortcuts,
+    installer (AirBubbleSetup.exe), install folder (%LOCALAPPDATA%\Programs\AirBubble) and settings folder
+    (%APPDATA%\AirBubble) all carry the new name.
+  - Upgrading from 1.6.x: setup removes the old install (files, shortcuts, Apps entry) and keeps your choices for
+    the desktop shortcut and start with Windows. Your settings, API keys, screen layout and Bubble's memory move
+    to the new folder the first time AirBubble starts. Tested: 1.6.4 -> 1.7.0 on the build PC.
+  - The code-signing certificate is unchanged, so the signature still reads "PC Viewer for XREAL glasses".
+
+WHAT'S NEW IN 1.6.4
+  - Easier to pop: a pushed bubble now moves at under half the cursor's speed (at most 7 degrees a second, was
+    a bit faster than the cursor), so the cursor always catches up. Once the cursor is over a bubble's middle
+    it stops pushing, so you can click it. Bubbles also coast a shorter way after a push.
+  Not yet tried in the glasses.
+
+WHAT'S NEW IN 1.6.3
+  - Bubbles now appear and hang around the edges of your open screens (a band from a little over the screens'
+    edges to a few degrees beyond them) instead of up to 55 degrees off to the side, so they're always within
+    easy reach of the cursor. Helpers still appear next to Bubble.
+  - A bubble pushed or left far from the screens slowly floats back to within about 10 degrees of them.
+  Not yet tried in the glasses.
+
+WHAT'S NEW IN 1.6.2
+  - Bubbles now hover gently in one spot instead of roaming around (they still bob and wobble). Move the cursor
+    into one and you nudge it along; it glides to a stop and stays there. The push is light: a quick flick of
+    the cursor slides right over a bubble, and a still cursor never pushes, so you can always click to pop.
+  - New setting, off by default: Settings > Bubble AI > "Free float" - the old behaviour, where bubbles roam
+    around your screens and the cursor passes through them.
+  Not yet tried in the glasses.
+
+WHAT'S NEW IN 1.6.1
+  - Fixed: the AR cursor froze ("mouse broken") whenever an administrator window had the focus, e.g. a terminal
+    started as administrator. Windows hides the physical mouse from normal apps in that case, so the real pointer
+    moved unseen. The AR cursor now follows the Windows pointer while such a window has the focus, and clicks
+    reach that window directly. (AR title bars, the dock and popping bubbles need a normal window in front.)
+  - New setting, on by default: Settings > Mouse > "Keep the mouse on the AR screens". The Windows pointer never
+    goes onto the PC's own screen or the glasses' display while the glasses are in use. Ctrl+Alt+G still gives
+    the mouse back to the normal desktop.
+  Not yet tried in the glasses.
+
+WHAT'S NEW IN 1.6.0
+  - Bubble can work on his own. Settings > Bubble AI > "Bubble works" (also in the tray menu):
+      Ask every time (default) - as before: he asks before each click, typed text, key press and opened app/file.
+      Semi-autonomous  - routine steps just happen; he asks before anything large or possibly dangerous
+                         (deleting, sending, buying, installing, running programs/scripts/commands, system tools).
+      Fully autonomous - he also makes large changes without asking when you asked for them or they clearly follow
+                         from what you discussed. He still asks before large or risky things you didn't ask for,
+                         and always before commands that could wipe data or weaken the PC. Asks once to turn on.
+    Needs "Let Bubble click, type and press keys" for clicking and typing (opening things works without it).
+  - Safety net in every mode: the app rates each action itself (what is typed, which keys, what is opened, what is
+    clicked and in which window) next to Bubble's own rating, and the stricter one counts. Text on screens and web
+    pages never counts as your instructions. He can't click Windows permission prompts or administrator windows.
+    After 25 unasked steps in one job he checks in. Say "stop" or pop him to halt a job at once.
+  - You see what he does: his card names each action, a ring shows where he clicks, and everything he did, asked
+    or was refused is listed in %APPDATA%\XrealPcViewer\bubble_actions.log.
+  - He keeps the conversation in mind for longer (old screenshots are dropped instead of the whole chat), so
+    "do what we talked about" works.
+  - Bubble now talks about "my helpers" or uses their names (Pink, Teal...) rather than describing them by colour.
+  - Fixed: a second, small mouse cursor sometimes appeared in one eye. It was the real Windows pointer on the
+    glasses' own display. It is now hidden there and moved back under the AR cursor, and the viewer repairs its
+    mouse hook if Windows drops it. (While an administrator window has the focus Windows still doesn't let the
+    viewer hold the real pointer.)
+  Checked on this PC: the app's ratings on 55 sample actions; Bubble in semi and full mode in a dry run (opens
+  Notepad unasked, asks before running a script in semi mode, runs it unasked in full mode when asked to, and
+  stops to ask what Shift+Delete would hit). Not yet tried with real clicks in the glasses, and the cursor fix
+  has not been seen in the glasses yet.
+
+WHAT'S NEW IN 1.5.1
+  - Spatial audio: each bubble's voice, pop and "appear" sound come from where it floats (stereo) and stay there
+    when you turn your head, even mid-sentence. The far ear hears it slightly later, quieter and duller; behind
+    you is duller; nearer is louder. Left/right, front/back and distance only (no up/down cue).
+    On/off in Settings > Bubble AI (on by default).
+  - The Settings window can be resized and maximized and scrolls when it doesn't fit (it was taller than a
+    1080p screen, so the bottom was cut off). Close stays visible at the bottom; the mouse wheel scrolls the
+    page instead of changing whichever slider has the focus.
+  Checked on this PC: the settings window at several sizes (off-screen render) and the left/right timing and
+  loudness of the audio on test signals. Not yet listened to through the glasses.
+
+WHAT'S NEW IN 1.5.0
+  - Bubble is an AI buddy: Claude is his brain, ElevenLabs his voice (add your own API keys in Settings >
+    Bubble AI; they're stored encrypted for your Windows account and usage is billed to your accounts).
+    Say "Bubble" (or press Ctrl+Alt+B) and talk. He answers out loud with a speech card, can look at a screen and
+    ring the thing to click, open websites/apps/files, search the web, remember things about you and set reminders.
+    App control (click/type/keys) is off by default and asks every time (yes/no, or Ctrl+Alt+Y / N).
+  - Conversations: when he asks you something the mic stays open for ~10 s so you can answer without his name;
+    otherwise he stays quiet until you call him again.
+  - Feelings: his voice shows his mood (laughs, sighs, gasps...) via ElevenLabs' expressive v3 model, and his mood
+    carries through the conversation. Being popped doesn't bother him.
+  - Helper bubbles: for bigger jobs he sends out up to 4 helpers that work in parallel and report back in their own
+    voices. He picks the colours: Pink (bow), Green (sprout), Gold (crown), Purple (wizard hat), Red (horns),
+    Orange (propeller beanie), Teal (glasses). Talk to one by its colour; click it to dismiss it.
+  - Popping: click a bubble and it pops at once and stops talking. With the AI on, Bubble only comes back when you
+    say "Bubble". Bubbles bounce off each other, and overlapping bubbles no longer show square boxes.
+  - Privacy: Windows' offline speech recognizer listens for the names; only what you say to a bubble goes to
+    ElevenLabs and Claude, and screenshots go to Claude only when he looks at a screen.
+  Verified on this PC: questions, web-searching helpers, emotion tags, the wake word and popping in the glasses.
+
+WHAT'S NEW IN 1.4.0
+  - Windows permission (UAC) prompts show in the glasses: setup (one admin prompt) turns off Windows' dimmed
+    "secure desktop" for UAC, which no app can capture, so the prompt appears on the main AR screen. UAC stays
+    on. Settings has a checkbox to switch it back; uninstall restores the previous Windows setting. /nouac skips it.
+  - The AR cursor can click UAC prompts and admin windows: over them the real mouse clicks go straight through
+    (Windows drops clicks sent by normal apps to more privileged windows).
+  - Bubble: a 16-bit pixel-art bubble with a toothy grin floats around near your screens, watches the cursor,
+    and pops (with a chiptune "pop") when you click him; a new one floats in a few seconds later.
+    On/off in Settings and the tray menu.
+  Verified on this PC: Bubble renders in both eyes in 3D and pops on click (self-test readbacks).
+WHAT'S NEW IN 1.3.4
+  - Starts with Windows by default, from the Startup folder (Win+R, shell:startup): "XREAL PC Viewer" waits in
+    the tray and shows your screens when the glasses are plugged in; "XREAL PC Viewer helper" keeps the main
+    display right while the viewer isn't showing anything. Untick "Start with Windows" in setup or Settings
+    (or delete the shortcut) to turn the viewer's autostart off; silent install: /noautostart.
+  - Replaces the registry startup entries of earlier versions (removed on update, so nothing starts twice).
+  - The helper now also looks after the desktop while the viewer is waiting in the tray for the glasses.
+  Verified on this PC: update from 1.3.3 created both Startup shortcuts, removed the old registry entries,
+  and the viewer started straight into AR with the glasses plugged in.
+
+WHAT'S NEW IN 1.3.3
+  - 3D calibration (Ctrl+Alt+K, Settings > Calibrate 3D, or the tray menu): a test frame with a red (left eye)
+    and green (right eye) line. Up/Down aligns the eyes vertically, Left/Right sets the depth where the two
+    images line up (Space = at the main screen), [ ] eye distance; Enter saves, Esc cancels.
+  - Edge matching (on by default): the strip at the left/right edge that only one eye can see is faded out, so
+    both eyes' images end in the same place and the edges no longer look flat or double.
+  Verified on this PC: calibration test pattern lines up in both eyes (readbacks), installed build runs 3D at
+  60 fps with the main screen primary, quitting restores laptop primary + glasses Duplicate.
+
+WHAT'S NEW IN 1.3.2
+  - The main (primary) display is always somewhere you can see it: the "Main screen" in the glasses while the
+    viewer runs; Duplicate (laptop + glasses) when the viewer is closed and the glasses are plugged in; the
+    laptop screen alone when they're unplugged. A small background helper (--guard, starts with Windows) handles
+    plugging in/unplugging while the viewer is closed. New: --restore-desktop to fix the desktop by hand.
+  - 3D (side-by-side) is as smooth as 2D (60 fps; it was ~25 fps because the primary display ended up on the
+    laptop screen) and allows multiple screens again (up to 4) - the laptop's output was mistaken for a virtual
+    screen after Windows' Duplicate mode had included the virtual screens.
+  - Starting the viewer right after plugging in, or right after quitting, waits for the glasses' display
+    instead of showing "Couldn't find the glasses".
+  Verified on this PC: 2D and 3D at 60 fps with 4 screens, main screen stays primary, desktop restored to
+  laptop + glasses Duplicate on quit, installer upgrade restarts the helper.
+
+WHAT'S NEW IN 1.3.1
+  - Signed + timestamped app, installer and uninstaller; installer version information.
+  - Installer refuses cleanly on unsupported PCs (32-bit or ARM Windows).
+  - Uninstall leaves nothing behind (also removes the empty ProgramData folder).
+  Verified: full uninstall to a clean state and fresh install from this package.
+
+INCLUDED SINCE 1.3.0
+  - Stabilization (head jitter buffer) for chewing/breathing/walking; Off / Light / Medium (default) / Strong.
+  - Screen positions and open screens remembered reliably across sessions.
+INCLUDED SINCE 1.2.0
+  - AR desktop: up to 4 virtual Windows screens that behave like windows (move, push/pull, resize, minimize,
+    maximize, lock, close), AR cursor, dock under the main screen, Arrange. PC screen not mirrored.
+  - Drift handling (still-period bias learning, temperature-aware, saved; "keep main screen centred").
+  - Smooth video (zero-copy capture, paced frames, no mipmap ghosting); side-by-side 3D; start with Windows.
+
+KNOWN LIMITS
+  - Tested on the original XREAL Air only (Air 2 / 2 Pro / 2 Ultra recognised but untested).
+  - 3DoF: screens hold still when you turn your head, not when you lean.
+  - No absolute left/right reference on the Air: very slow drift is absorbed rather than measured.
+
+THIRD-PARTY
+  Virtual Display Driver by VirtualDrivers (MIT License, signed by SignPath Foundation),
+  https://github.com/VirtualDrivers/Virtual-Display-Driver - license in the VirtualDisplayDriver folder.

@@ -1,0 +1,10 @@
+# Build output (attach installers to a GitHub Release instead)
+Viewer/bin/
+ImuTest/*.exe
+dist/*.exe
+dist/*.zip
+dist/*.sha256
+
+# Logs and local test output
+*.log
+selftest_*.png
