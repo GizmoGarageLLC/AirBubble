@@ -4,7 +4,7 @@ Keeps AirBubble working when the laptop lid is closed or opened.
 
 ## Why
 When the lid closes, Windows turns off the built-in screen and reshuffles the displays.
-AirBubble (v1.7.0, and PC Viewer before it) doesn't handle that: it loses a virtual screen's capture
+AirBubble (up to v1.7.2, and PC Viewer before it) doesn't handle that: it loses a virtual screen's capture
 ("no DXGI output for \\.\DISPLAY6") and never re-arranges the AR desktop, leaving only the
 raw side-by-side 3D desktop in the glasses (taskbar in one eye, tray icons in the other).
 

@@ -98,7 +98,7 @@ KEYS
 
 SETTINGS (Ctrl+Alt+S)
   Default distance/size for new screens, cursor speed, side-by-side 3D and eye distance, field of view,
-  stabilization, start with Windows.
+  stabilization, how many screens (4, or up to 8), start with Windows.
   - Stabilization (default Medium) ignores small head wobble - chewing, breathing, walking - so the screens stay
     still; deliberate head turns are followed straight away. Use Strong while walking, Off for the fastest response.
   - If screens seem to slide when you turn your head, adjust "Field of view" until they hold still.

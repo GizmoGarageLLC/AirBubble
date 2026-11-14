@@ -194,6 +194,12 @@ Logs, settings, layout and calibration: `%APPDATA%\AirBubble\`.
 - **Closing the laptop lid** loses a screen's capture and leaves the raw desktop in the glasses. Workaround:
   [LidWatcher](LidWatcher/README.md). Proper fix: handle display topology changes in `ViewerApp.cs` /
   `DisplayConfig.cs` by re-arranging the desktop and re-opening Desktop Duplication.
+- **Changing the number of screens** (Settings, or an update that resizes the pool) restarts the virtual display
+  driver, which gives its monitors new Windows names (`\\.\DISPLAYn`). Saved screen positions are keyed by that
+  name (`layout.ini`), so open screens come back as new screens once. Fix: key the layout by the monitor's
+  stable id (`MonitorId`, e.g. `UID256`) instead of the device name.
+- The **Allow up to 8 screens** checkbox has been tested through its elevated step (`--vdd-screens`) but not yet
+  clicked through in the Settings window itself.
 
 ### Source layout
 
