@@ -1,8 +1,8 @@
 AirBubble - version 1.7.2
 =========================
 
-File:      AirBubbleSetup.exe (714,248 bytes)
-SHA-256:   7221E43D622C2FF9AD30F664CD37B4CBA4812AB78185143213FFC748A43334EA
+File:      AirBubbleSetup.exe (714,760 bytes)
+SHA-256:   8CE61001A5E307FD3F33378E7DD411995C29FDE2A5A85562CD454DC29D5653AA
 Signed by: CN=PC Viewer for XREAL glasses (independent build), O=Self-signed
            (self-signed code-signing certificate, thumbprint 9B59D20322D5C17AF5297F692E4B1EB5D6BAFAEF, valid until 2031-11-11)
 
@@ -28,6 +28,7 @@ WHAT'S NEW IN 1.7.2
   - New in Settings: "Allow up to 8 screens (quality may be degraded)". Changing it asks for admin once, restarts
     AirBubble and the virtual screens driver (screens blink and reopen as new screens; Ctrl+Alt+N adds more).
   - Setup keeps whatever you chose there (it raises a smaller pool to 4 but never lowers one you raised to 8).
+  - Back on 4 screens the build PC renders a steady 60 fps (no late frames in the viewer log).
   Tested on the build PC: 1.7.1 -> 1.7.2 update, then the 8 -> 4 driver change (4 virtual monitors afterwards).
   Not yet tested: ticking/unticking the new checkbox in the Settings window itself.
 
