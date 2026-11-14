@@ -176,6 +176,21 @@ namespace XrealDesktop.PcViewer
                 }
                 catch { return 4; }
             }
+            int vs = Array.IndexOf(args, "--vdd-screens");
+            if (vs >= 0)
+            {
+                // Elevated step (Settings "Allow up to 8 screens"): set the driver's number of virtual screens and restart it
+                int n; if (vs + 1 >= args.Length || !int.TryParse(args[vs + 1], out n)) return 5;
+                var lines = new List<string>();
+                try
+                {
+                    string err = XrealDesktop.Setup.VddInstall.SetScreens(n, lines.Add);
+                    if (err.Length > 0) lines.Add(err);
+                    try { File.WriteAllLines(Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt"), lines); } catch { }
+                    return err.Length == 0 ? 0 : 3;
+                }
+                catch (Exception e) { lines.Add(e.ToString()); try { File.WriteAllLines(Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt"), lines); } catch { } return 4; }
+            }
             if (Array.IndexOf(args, "--keys") >= 0)
             {
                 // Just the Claude / ElevenLabs key boxes (works while the viewer runs)
@@ -311,6 +326,15 @@ namespace XrealDesktop.PcViewer
                     if (autostart && !WaitForGlasses()) return 0;
                     SetShowing(true);
                     var result = RunOnce(settings, selfTest, autostart, ref restoreTopology, ref set3d);
+                    if (result == RunResult.Restart && PendingScreens > 0)
+                    {
+                        // Settings asked for a different number of virtual screens: the driver restarts, so hand the
+                        // desktop back first, change it (elevated), keep the new monitors off, then come back up.
+                        int n = PendingScreens; PendingScreens = 0;
+                        Cleanup(ref set3d, ref restoreTopology);
+                        SetShowing(false);
+                        ChangeVirtualScreens(n);
+                    }
                     if (result == RunResult.Restart) { Log.W("Restarting viewer"); continue; }
                     Cleanup(ref set3d, ref restoreTopology);
                     SetShowing(false);
@@ -322,6 +346,30 @@ namespace XrealDesktop.PcViewer
         }
 
         enum RunResult { Quit, Restart, Unplugged, Error }
+
+        /// <summary>Default and maximum size of the virtual screens pool (Settings: "Allow up to 8 screens").</summary>
+        public const int DefaultScreens = 4, MaxScreens = 8;
+        /// <summary>Set by Settings before a restart: change the driver to this many virtual screens (0 = no change).</summary>
+        public static volatile int PendingScreens;
+
+        /// <summary>Virtual screens in the driver config, or -1 if the driver wasn't installed by setup.</summary>
+        public static int ConfiguredScreens() { return XrealDesktop.Setup.VddInstall.ConfiguredCount(); }
+
+        /// <summary>Runs this exe elevated with --vdd-screens n (one admin prompt), then keeps the restarted driver's monitors off.</summary>
+        static void ChangeVirtualScreens(int n)
+        {
+            Log.W("Changing virtual screens: " + ConfiguredScreens() + " -> " + n);
+            try
+            {
+                var p = Process.Start(new ProcessStartInfo(Application.ExecutablePath, "--vdd-screens " + n) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden });
+                if (!p.WaitForExit(60000)) { Log.W("Virtual screens change: no answer within 60 s"); return; }
+                Log.W(p.ExitCode == 0 ? "Virtual screens now " + ConfiguredScreens() : "Virtual screens change failed (code " + p.ExitCode + ", see %TEMP%\\AirBubble-driver.txt)");
+            }
+            catch (System.ComponentModel.Win32Exception e) { Log.W(e.NativeErrorCode == 1223 ? "Virtual screens change: permission declined" : "Virtual screens change: " + e.Message); return; }
+            Thread.Sleep(3000);   // the restarted driver brings its monitors back attached
+            try { VirtualScreens.DetachAll(); } catch (Exception e) { Log.W("Detach after driver restart: " + e.Message); }
+            Thread.Sleep(1000);
+        }
 
         /// <summary>
         /// Held while the viewer owns the displays (from the moment the glasses are found until the desktop is

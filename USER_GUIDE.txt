@@ -1,4 +1,4 @@
-AirBubble - version 1.7.1
+AirBubble - version 1.7.2
 =========================
 
 Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses plugged straight into a Windows PC.
@@ -39,7 +39,7 @@ YOUR SCREENS IN AR
   - Drag the left, right or bottom EDGE (it glows blue) to resize.
   - Title bar buttons: padlock = lock in place, - minimize, square maximize, X close.
   - Look down for the DOCK: "+ New screen", Arrange, Recenter, Settings, and minimized screens.
-  - All AR screens are extra Windows displays (up to 8) from the bundled virtual display driver; the PC's own
+  - All AR screens are extra Windows displays (4, or up to 8 with Settings > "Allow up to 8 screens") from the bundled virtual display driver; the PC's own
     screen is not mirrored (Settings can add it). While the viewer runs, the main AR screen is the Windows primary
     display (taskbar, Start, new windows), and open windows are moved onto it. Closing a screen moves its windows
     to your other screens. Screen positions are remembered. Everything is put back when you quit.
@@ -102,6 +102,9 @@ SETTINGS (Ctrl+Alt+S)
   - Stabilization (default Medium) ignores small head wobble - chewing, breathing, walking - so the screens stay
     still; deliberate head turns are followed straight away. Use Strong while walking, Off for the fastest response.
   - If screens seem to slide when you turn your head, adjust "Field of view" until they hold still.
+  - Allow up to 8 screens (quality may be degraded): 4 screens by default, which is the smoothest. With up to 8,
+    many open screens (especially video) can make the glasses jittery, mostly on integrated graphics. Changing it
+    asks for admin once and restarts AirBubble; the screens blink and reopen as new screens (Ctrl+Alt+N adds more).
   - 3D switches the glasses to side-by-side mode; they blank for a moment. They go back to 2D when you quit.
   - Edge matching (on by default): near the left and right edges each eye sees a strip the other eye can't,
     which makes the edges look flat or double. The viewer fades that strip out so both eyes' images end in the

@@ -44,6 +44,7 @@ namespace XrealDesktop.PcViewer
             AddSlider(t, "Screen size", 30, 300, (int)(s.PanelWidth * 100), v => string.Format("{0:F2} m", v / 100.0), v => { s.PanelWidth = v / 100f; });
             AddNote(t, "Each screen can also be moved, resized and pushed/pulled by its title bar in AR.");
             AddCheck(t, "Also show this PC's own screen in AR", s.ShowPcScreens, v => { s.ShowPcScreens = v; });
+            AddScreensOption(t);
 
             AddHeader(t, "Mouse");
             AddSlider(t, "Cursor speed", 30, 300, (int)(s.MouseSpeed * 100), v => string.Format("{0:F1}x", v / 100.0), v => { s.MouseSpeed = v / 100f; });
@@ -162,6 +163,36 @@ namespace XrealDesktop.PcViewer
         }
 
         void Changed() { if (!m_Loading) m_S.NotifyChanged(); }
+
+        /// <summary>
+        /// "Allow up to 8 screens": the virtual screens pool is the driver's config, so changing it restarts the driver
+        /// (admin prompt) and the viewer. Unticking a change that is refused puts the tick back.
+        /// </summary>
+        void AddScreensOption(TableLayoutPanel t)
+        {
+            int n = Program.ConfiguredScreens();
+            if (n < 0) { AddNote(t, "Virtual screens: the driver wasn't installed by AirBubble setup, so its number of screens is managed elsewhere."); return; }
+            var c = new CheckBox { Text = "Allow up to " + Program.MaxScreens + " screens (quality may be degraded)", Checked = n > Program.DefaultScreens, AutoSize = true, Margin = new Padding(3, 2, 3, 2) };
+            bool reverting = false;
+            c.CheckedChanged += delegate
+            {
+                if (m_Loading || reverting) return;
+                int want = c.Checked ? Program.MaxScreens : Program.DefaultScreens;
+                string msg = (c.Checked
+                    ? "Up to " + Program.MaxScreens + " screens: every screen is captured and drawn live, so with many screens open the glasses can get jittery and less sharp, especially on integrated graphics.\n\n"
+                    : "Back to " + Program.DefaultScreens + " screens (smoothest). Screens 5 to 8 close; their windows move to your other screens.\n\n") +
+                    "Windows will ask for permission once, AirBubble restarts and the screens blink while the virtual screens driver restarts. " +
+                    "Open screens come back as new screens: press Ctrl+Alt+N to add more.";
+                if (MessageBox.Show(this, msg, Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK)
+                {
+                    reverting = true; c.Checked = !c.Checked; reverting = false; return;
+                }
+                Program.PendingScreens = want;
+                m_Restart();
+            };
+            t.Controls.Add(c, 0, t.RowCount); t.SetColumnSpan(c, 3); t.RowCount++;
+            AddNote(t, "Off: " + Program.DefaultScreens + " screens, smoothest. On: up to " + Program.MaxScreens + "; with many screens open (especially video) the glasses may stutter. Changing it asks for admin once.");
+        }
 
         /// <summary>Runs this exe elevated with --uac-prompts on|off (the admin prompt for it shows on the PC screen).</summary>
         void SetUacPrompts(bool on)

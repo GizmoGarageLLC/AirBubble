@@ -1,8 +1,8 @@
-AirBubble - version 1.7.1
+AirBubble - version 1.7.2
 =========================
 
-File:      AirBubbleSetup.exe (704,008 bytes)
-SHA-256:   60AD4E728C59AACF5843B19326DDE8C07885283CDF1BEDB74B3FCCA53C85D6D0
+File:      AirBubbleSetup.exe (714,248 bytes)
+SHA-256:   7221E43D622C2FF9AD30F664CD37B4CBA4812AB78185143213FFC748A43334EA
 Signed by: CN=PC Viewer for XREAL glasses (independent build), O=Self-signed
            (self-signed code-signing certificate, thumbprint 9B59D20322D5C17AF5297F692E4B1EB5D6BAFAEF, valid until 2031-11-11)
 
@@ -22,6 +22,14 @@ ABOUT THE SIGNATURE (please read)
   certificate (or free open-source signing such as SignPath Foundation) removes that everywhere.
   On PCs you own you can make Windows trust it: run Trust-Publisher.cmd once (admin). Undo: Trust-Publisher.cmd remove
   Microsoft Defender scan of the installer, the app and the driver: no threats found.
+
+WHAT'S NEW IN 1.7.2
+  - Back to 4 screens by default: 8 made the glasses jittery on integrated graphics.
+  - New in Settings: "Allow up to 8 screens (quality may be degraded)". Changing it asks for admin once, restarts
+    AirBubble and the virtual screens driver (screens blink and reopen as new screens; Ctrl+Alt+N adds more).
+  - Setup keeps whatever you chose there (it raises a smaller pool to 4 but never lowers one you raised to 8).
+  Tested on the build PC: 1.7.1 -> 1.7.2 update, then the 8 -> 4 driver change (4 virtual monitors afterwards).
+  Not yet tested: ticking/unticking the new checkbox in the Settings window itself.
 
 WHAT'S NEW IN 1.7.1
   - Up to 8 floating screens (was 4). Press Ctrl+Alt+N or "+ New screen" in the dock for each one.

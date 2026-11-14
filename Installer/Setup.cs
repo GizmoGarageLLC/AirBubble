@@ -24,15 +24,15 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("AirBubble")]
 [assembly: System.Reflection.AssemblyCompany("Independent build (not affiliated with XREAL)")]
 [assembly: System.Reflection.AssemblyCopyright("Independent build")]
-[assembly: System.Reflection.AssemblyVersion("1.7.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.7.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.7.1")]
+[assembly: System.Reflection.AssemblyVersion("1.7.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.7.2.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.7.2")]
 namespace XrealDesktop.Setup
 {
     static class Product
     {
         public const string Name = "AirBubble";
-        public const string Version = "1.7.1";
+        public const string Version = "1.7.2";
         public const string FolderName = "AirBubble";
         public const string ExeName = "AirBubble.exe";
         public const string UninstallerName = "Uninstall.exe";
@@ -42,7 +42,8 @@ namespace XrealDesktop.Setup
         public static readonly string[] Payload = { "AirBubble.exe", "README.txt" };
         public static readonly string[] DriverPayload = { "MttVDD.dll", "mttvdd.cat", "MttVDD.inf", "vdd_settings.xml", "LICENSE.txt" };
         public const string DriverFolder = "VirtualDisplayDriver";
-        public const int VirtualScreens = 8;   // 4 up to 1.7.0; an update raises an older driver config (one admin prompt)
+        // Default pool. Users can allow up to 8 in Settings; setup never lowers a larger pool, and raises a smaller one.
+        public const int VirtualScreens = 4;
 
         public static string DefaultDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", FolderName); } }
         public static string StartMenuLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), Name + ".lnk"); } }

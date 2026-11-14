@@ -11,7 +11,7 @@ if not exist bin mkdir bin
   /r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll ^
   /r:System.Net.Http.dll /r:System.Web.Extensions.dll /r:System.Security.dll ^
   /r:"%WINDIR%\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll" ^
-  src\*.cs shared\*.cs
+  src\*.cs shared\*.cs ..\Installer\VddInstall.cs
 if errorlevel 1 ( echo BUILD FAILED & exit /b 1 )
 powershell -NoProfile -ExecutionPolicy Bypass -File ..\Installer\signing\sign.ps1 bin\AirBubble.exe
 echo Built bin\AirBubble.exe
