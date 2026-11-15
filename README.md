@@ -8,7 +8,6 @@ resize them, push them away or pull them closer. Bubble, a little 16-bit buddy w
 next to them and helps out when you call his name.
 
 No phone, no Beam, no Unity, no XREAL SDK. Just the glasses, a USB-C cable and your PC.
-*Formerly "PC Viewer for XREAL glasses". Not affiliated with XREAL.*
 
 ![Four screens arranged in an arc around you](docs/images/screens.png)
 
