@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace XrealDesktop.PcViewer
@@ -87,6 +88,10 @@ namespace XrealDesktop.PcViewer
             AddCheck(t, "Spatial audio: bubbles' voices and pops come from where they float (stereo speakers or headphones)", s.BubbleSpatialAudio, v => { s.BubbleSpatialAudio = v; });
             AddKey(t, "Claude API key", "anthropic", Secrets.Anthropic != null);
             AddKey(t, "ElevenLabs API key", "elevenlabs", Secrets.ElevenLabs != null);
+            AddVoice(t, "Bubble", -1);
+            for (int i = 0; i < Bubble.HelperColors.Length; i++) AddVoice(t, Bubble.HelperColors[i], i);
+            AddNote(t, "Pick a voice from your ElevenLabs account, or paste any voice ID. \"Default\" keeps the voice each bubble uses now. Play tries the voice.");
+            LoadVoices();
             AddCheck(t, "Let Bubble click, type and press keys for me", s.BubbleAppControl, v => { s.BubbleAppControl = v; });
             AddChoice(t, "Bubble works", Autonomy.Names, s.BubbleAutonomy, v =>
             {
@@ -293,6 +298,127 @@ namespace XrealDesktop.PcViewer
             };
             int r = t.RowCount++;
             t.Controls.Add(l, 0, r); t.Controls.Add(cb, 1, r); t.SetColumnSpan(cb, 2);
+        }
+
+        // ---- bubble voices ----
+        const string DefaultLabel = "Default";
+        sealed class VoiceItem
+        {
+            public string Id, Name;
+            public override string ToString() { return Name + "  (" + Id + ")"; }
+        }
+        readonly System.Collections.Generic.List<ComboBox> m_VoiceBoxes = new System.Collections.Generic.List<ComboBox>();
+        System.Collections.Generic.List<ElevenLabs.Voice> m_Voices;
+        static readonly System.Text.RegularExpressions.Regex s_VoiceId = new System.Text.RegularExpressions.Regex(@"[A-Za-z0-9]{16,}");
+
+        string GetVoice(int helper) { return helper < 0 ? (m_S.BubbleVoice == Settings.DefaultVoice ? "" : m_S.BubbleVoice) : (m_S.HelperVoice[helper] ?? ""); }
+        void SetVoice(int helper, string id)
+        {
+            if (helper < 0) m_S.BubbleVoice = string.IsNullOrEmpty(id) ? Settings.DefaultVoice : id;
+            else m_S.HelperVoice[helper] = id ?? "";
+        }
+
+        /// <summary>The voice id typed or picked in a box ("" = default).</summary>
+        static string VoiceIn(ComboBox cb)
+        {
+            var item = cb.SelectedItem as VoiceItem;
+            if (item != null && cb.Text == item.ToString()) return item.Id;
+            string text = (cb.Text ?? "").Trim();
+            if (text.Length == 0 || text.Equals(DefaultLabel, StringComparison.OrdinalIgnoreCase)) return "";
+            var m = s_VoiceId.Matches(text);
+            return m.Count > 0 ? m[m.Count - 1].Value : text;
+        }
+
+        string VoiceLabel(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return DefaultLabel;
+            var v = m_Voices == null ? null : m_Voices.Find(x => x.Id == id);
+            return v != null ? new VoiceItem { Id = v.Id, Name = v.Name }.ToString() : id;
+        }
+
+        /// <summary>One bubble's voice: an editable list (Default, the account's voices, or a pasted id) and a Play button.</summary>
+        void AddVoice(TableLayoutPanel t, string name, int helper)
+        {
+            var l = new Label { Text = name + "'s voice", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(3, 6, 12, 1) };
+            var cb = new ComboBox { DropDownStyle = ComboBoxStyle.DropDown, Dock = DockStyle.Fill, Margin = new Padding(3, 3, 3, 1), Tag = helper };
+            cb.Items.Add(DefaultLabel);
+            cb.Text = VoiceLabel(GetVoice(helper));
+            var play = new Button { Text = "Play", AutoSize = true, Margin = new Padding(3, 2, 3, 1) };
+            string committed = GetVoice(helper);
+            Action commit = () =>
+            {
+                if (m_Loading) return;
+                string id = VoiceIn(cb);
+                if (id == committed) return;
+                committed = id; SetVoice(helper, id); Changed();
+                Log.W("Settings: " + name + "'s voice = " + (id.Length == 0 ? "default" : id));
+            };
+            cb.SelectionChangeCommitted += delegate { BeginInvoke(commit); };   // Text updates after the event
+            cb.Leave += delegate { commit(); };
+            cb.KeyDown += (o, e) => { if (e.KeyCode == System.Windows.Forms.Keys.Enter) { commit(); e.SuppressKeyPress = true; } };
+            play.Click += delegate { commit(); PlaySample(name, helper, play); };
+            m_VoiceBoxes.Add(cb);
+            int r = t.RowCount++;
+            t.Controls.Add(l, 0, r); t.Controls.Add(cb, 1, r); t.Controls.Add(play, 2, r);
+        }
+
+        /// <summary>Fills the voice lists from the ElevenLabs account (in the background).</summary>
+        void LoadVoices()
+        {
+            if (Secrets.ElevenLabs == null) return;
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                System.Collections.Generic.List<ElevenLabs.Voice> list;
+                try { list = ElevenLabs.Voices(System.Threading.CancellationToken.None); }
+                catch (Exception ex) { Log.W("Settings voices: " + ex.Message); return; }
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        m_Voices = list;
+                        var items = list.Where(v => !string.IsNullOrEmpty(v.Id)).OrderBy(v => v.Name).Select(v => (object)new VoiceItem { Id = v.Id, Name = v.Name ?? v.Id }).ToArray();
+                        foreach (var cb in m_VoiceBoxes)
+                        {
+                            if (cb.Focused) continue;   // don't disturb typing
+                            string id = GetVoice((int)cb.Tag);
+                            cb.BeginUpdate();
+                            cb.Items.Clear(); cb.Items.Add(DefaultLabel); cb.Items.AddRange(items);
+                            var match = items.Cast<VoiceItem>().FirstOrDefault(v => v.Id == id);
+                            if (match != null) cb.SelectedItem = match; else cb.Text = VoiceLabel(id);
+                            cb.EndUpdate();
+                        }
+                    }));
+                }
+                catch { }   // form closed
+            });
+        }
+
+        /// <summary>Says a short line in the voice chosen for this bubble.</summary>
+        void PlaySample(string name, int helper, Button play)
+        {
+            if (Secrets.ElevenLabs == null) { MessageBox.Show(this, "Add your ElevenLabs API key first.", Text); return; }
+            string id = GetVoice(helper);
+            if (id.Length == 0) id = helper < 0 ? Settings.DefaultVoice : (Crew.DefaultHelperVoice(helper, m_Voices) ?? CrewAgent.FallbackVoice);
+            play.Enabled = false;
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                string err = null;
+                try
+                {
+                    var pcm = ElevenLabs.Speak("Hi! I'm " + name + ". This is how I sound.", id, System.Threading.CancellationToken.None);
+                    if (pcm != null && pcm.Length > 0) AudioOut.Play(pcm, ElevenLabs.Rate);
+                }
+                catch (Exception ex) { err = ex.Message; Log.W("Settings voice test: " + ex.Message); }
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        play.Enabled = true;
+                        if (err != null) MessageBox.Show(this, "Couldn't play voice " + id + ":\n" + err, Text);
+                    }));
+                }
+                catch { }
+            });
         }
 
         void AddCheck(TableLayoutPanel t, string label, bool value, Action<bool> apply)

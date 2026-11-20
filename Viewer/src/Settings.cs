@@ -31,6 +31,9 @@ namespace XrealDesktop.PcViewer
         public volatile bool BubbleFreeFloat = false;   // true: bubbles roam freely and the cursor passes through; false: they hover near one spot and the cursor nudges them
         public volatile string BubbleVoice = DefaultVoice;  // ElevenLabs voice id for the main Bubble ("" = pick one)
         public const string DefaultVoice = "uWNz6TbvrJHW6G4bBMPw";
+        /// <summary>ElevenLabs voice id per helper, in Bubble.HelperColors order ("" = default: picked from the account's voices).</summary>
+        public readonly string[] HelperVoice = new string[Bubble.HelperColors.Length];
+        public string HelperVoiceFor(int index) { var v = index >= 0 && index < HelperVoice.Length ? HelperVoice[index] : null; return string.IsNullOrEmpty(v) ? null : v; }
         public volatile bool ConfineMouse = true;  // AR mouse mode: the Windows pointer stays on the screens shown in AR (never the PC's own screen)
         public volatile float MouseSpeed = 1.0f;   // AR cursor speed multiplier (1 = one screen pixel per mouse count)
 
@@ -96,6 +99,13 @@ namespace XrealDesktop.PcViewer
                         case "bubbleAutonomy": if (fOk) s.BubbleAutonomy = (int)Clamp(f, 0, 2); break;
                         case "bubbleVoice": s.BubbleVoice = v.Length > 0 ? v : DefaultVoice; break;
                         case "stabilization": if (fOk) s.Stabilization = (int)Clamp(f, 0, 3); break;
+                        default:
+                            if (k.StartsWith("voice", StringComparison.Ordinal))
+                            {
+                                int i = Array.FindIndex(Bubble.HelperColors, n => "voice" + n == k);
+                                if (i >= 0) s.HelperVoice[i] = v;
+                            }
+                            break;
                     }
                 }
             }
@@ -110,10 +120,12 @@ namespace XrealDesktop.PcViewer
             try
             {
                 Directory.CreateDirectory(Dir);
-                File.WriteAllText(PathFor(), string.Format(CultureInfo.InvariantCulture,
+                var helpers = new System.Text.StringBuilder();
+                for (int i = 0; i < HelperVoice.Length; i++) helpers.Append("voice" + Bubble.HelperColors[i] + "=" + (HelperVoice[i] ?? "") + "\r\n");
+                File.WriteAllText(PathFor(), helpers.Insert(0, string.Format(CultureInfo.InvariantCulture,
                     "fovV={0}\r\ndistance={1}\r\npanelWidth={2}\r\npredictMs={3}\r\ncaptureFps={4}\r\nipdMm={5}\r\ncurved={6}\r\nsbs3d={7}\r\nlookToInteract={8}\r\nmouseSpeed={9}\r\nshowPcScreens={10}\r\nautoDrift={11}\r\nstabilization={12}\r\nstereoConverge={13}\r\nstereoVOffset={14}\r\nstereoEdgeMatch={15}\r\nbubble={16}\r\nbubbleAi={17}\r\nbubbleAppControl={18}\r\nbubbleVoice={19}\r\nbubbleSpatial={20}\r\nbubbleAutonomy={21}\r\nconfineMouse={22}\r\nbubbleFreeFloat={23}\r\n",
                     FovV, Distance, PanelWidth, PredictMs, CaptureFps, IpdMm, Curved ? 1 : 0, Sbs3D ? 1 : 0, LookToInteract ? 1 : 0, MouseSpeed, ShowPcScreens ? 1 : 0, AutoDrift ? 1 : 0, Stabilization,
-                    StereoConverge, StereoVOffset, StereoEdgeMatch ? 1 : 0, ShowBubble ? 1 : 0, BubbleAi ? 1 : 0, BubbleAppControl ? 1 : 0, BubbleVoice ?? "", BubbleSpatialAudio ? 1 : 0, BubbleAutonomy, ConfineMouse ? 1 : 0, BubbleFreeFloat ? 1 : 0));
+                    StereoConverge, StereoVOffset, StereoEdgeMatch ? 1 : 0, ShowBubble ? 1 : 0, BubbleAi ? 1 : 0, BubbleAppControl ? 1 : 0, BubbleVoice ?? "", BubbleSpatialAudio ? 1 : 0, BubbleAutonomy, ConfineMouse ? 1 : 0, BubbleFreeFloat ? 1 : 0)).ToString());
             }
             catch { }
         }

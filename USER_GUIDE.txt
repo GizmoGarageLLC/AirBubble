@@ -77,6 +77,8 @@ YOUR SCREENS IN AR
       screens, it slowly floats back). The cursor always catches up, and once it's over a bubble's middle it
       stops pushing, so you can click to pop. Prefer the old style? Settings > Bubble AI > "Free float": they
       roam around your screens again and the cursor passes through them.
+    * Voices: Settings > Bubble AI has a voice box for Bubble and each helper. Pick one of your ElevenLabs
+      voices or paste any voice ID, and press Play to hear it. "Default" keeps the voice each bubble uses now.
     * Spatial audio: each bubble's voice and pop come from where it floats and stay there when you turn your
       head (stereo; on/off in Settings > Bubble AI).
     Privacy: Windows' own offline speech recognizer listens for the names; only what you say to a bubble is sent

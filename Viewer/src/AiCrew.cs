@@ -90,6 +90,8 @@ namespace XrealDesktop.PcViewer
             // talking while the mic is open: keep it open until the sentence is finished
             Ears.SpeechStarted += () => { var w = m_ListenFor; if (w != null && NowMs < m_ListenUntilMs) { m_ListenUntilMs = Math.Max(m_ListenUntilMs, NowMs + 15000); w.CardUntilMs = Math.Max(w.CardUntilMs, m_ListenUntilMs); } };
             m_ReminderTimer = new Timer(_ => CheckReminders(), null, 5000, 5000);
+            Main.VoiceId = MainVoice();
+            m_Settings.Changed += ApplyVoices;
             ThreadPool.QueueUserWorkItem(_ => PickVoices());
             if (!Ears.Ok) Log.W("Bubble can't hear: " + Ears.Error);
         }
@@ -107,10 +109,35 @@ namespace XrealDesktop.PcViewer
                 if (Secrets.ElevenLabs == null) return;
                 m_Voices = ElevenLabs.Voices(CancellationToken.None);
                 Log.W("ElevenLabs voices: " + string.Join(", ", m_Voices.Select(v => v.Name)));
-                string chosen = m_Settings.BubbleVoice;
-                Main.VoiceId = !string.IsNullOrEmpty(chosen) ? chosen : Prefer(new[] { "Will", "Charlie", "Liam", "Chris", "Eric" }, null);
+                Main.VoiceId = MainVoice();
             }
             catch (Exception ex) { Log.W("Voices: " + ex.Message); }
+        }
+
+        string MainVoice() { string v = m_Settings.BubbleVoice; return !string.IsNullOrEmpty(v) ? v : Settings.DefaultVoice; }
+
+        /// <summary>Settings changed: voices picked in Settings take effect at once (helpers on "Default" keep the one they got).</summary>
+        void ApplyVoices()
+        {
+            Main.VoiceId = MainVoice();
+            foreach (var h in Snapshot())
+            {
+                if (!h.IsHelper) continue;
+                var v = m_Settings.HelperVoiceFor(h.Tint - 1);
+                if (v != null) h.VoiceId = v;
+            }
+        }
+
+        /// <summary>Default voice for a helper (index in Bubble.HelperColors) from a voice list, as Spawn picks it.</summary>
+        public static string DefaultHelperVoice(int index, List<ElevenLabs.Voice> voices)
+        {
+            if (voices == null || index < 0 || index >= s_HelperVoices.Length) return null;
+            foreach (var n in s_HelperVoices[index])
+            {
+                var v = voices.Find(x => x.Name != null && x.Name.StartsWith(n, StringComparison.OrdinalIgnoreCase));
+                if (v != null) return v.Id;
+            }
+            return voices.Count > 0 ? voices[0].Id : null;
         }
 
         string Prefer(string[] names, HashSet<string> taken)
@@ -803,7 +830,7 @@ Use them when you actually feel something, typically zero to two per reply (neve
                     string color = want != null && free(want) ? want : s_HelperNames.FirstOrDefault(free);
                     if (want != null && color != want) out1.Add(want + " is already out, so using " + color);
                     var h = new CrewAgent { Name = color, Tint = Array.IndexOf(s_HelperNames, color) + 1, IsHelper = true, Task = task };
-                    h.VoiceId = Prefer(s_HelperVoices[h.Tint - 1], taken);
+                    h.VoiceId = m_Settings.HelperVoiceFor(h.Tint - 1) ?? Prefer(s_HelperVoices[h.Tint - 1], taken);
                     if (h.VoiceId != null) taken.Add(h.VoiceId);
                     m_Agents.Add(h); StartWorker(h);
                     h.Thinking = true; h.Card = "On it!"; h.CardUntilMs = NowMs + 3000;
@@ -841,6 +868,7 @@ Use them when you actually feel something, typically zero to two per reply (neve
         public void Dispose()
         {
             try { m_ReminderTimer.Dispose(); } catch { }
+            m_Settings.Changed -= ApplyVoices;
             foreach (var a in Snapshot()) { a.Cts.Cancel(); try { a.Inbox.CompleteAdding(); } catch { } }
             Speaker.Dispose(); Ears.Dispose();
         }

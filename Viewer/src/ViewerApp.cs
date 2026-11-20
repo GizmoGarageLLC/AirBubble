@@ -191,6 +191,21 @@ namespace XrealDesktop.PcViewer
                 }
                 catch (Exception e) { lines.Add(e.ToString()); try { File.WriteAllLines(Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt"), lines); } catch { } return 4; }
             }
+            int vt = Array.IndexOf(args, "--voice-test");
+            if (vt >= 0)
+            {
+                // AirBubble.exe --voice-test <voiceId>: speaks a test line in that ElevenLabs voice (result in %TEMP%\AirBubble-voice.txt)
+                string id = vt + 1 < args.Length ? args[vt + 1] : Settings.Load().BubbleVoice, res;
+                try
+                {
+                    var pcm = ElevenLabs.Speak("Hi! I'm Bubble. This is how I sound.", id, System.Threading.CancellationToken.None);
+                    AudioOut.Play(pcm, ElevenLabs.Rate);
+                    res = "OK " + id + " " + pcm.Length + " samples";
+                }
+                catch (Exception e) { res = "FAIL " + id + ": " + e.Message; }
+                try { File.WriteAllText(Path.Combine(Path.GetTempPath(), "AirBubble-voice.txt"), res); } catch { }
+                return res.StartsWith("OK") ? 0 : 5;
+            }
             if (Array.IndexOf(args, "--keys") >= 0)
             {
                 // Just the Claude / ElevenLabs key boxes (works while the viewer runs)
