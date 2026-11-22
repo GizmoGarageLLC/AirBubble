@@ -1,4 +1,4 @@
-AirBubble - version 1.7.2
+AirBubble - version 1.7.3
 =========================
 
 Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses plugged straight into a Windows PC.
