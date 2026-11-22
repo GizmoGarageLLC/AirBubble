@@ -191,6 +191,18 @@ namespace XrealDesktop.PcViewer
                 }
                 catch (Exception e) { lines.Add(e.ToString()); try { File.WriteAllLines(Path.Combine(Path.GetTempPath(), "AirBubble-driver.txt"), lines); } catch { } return 4; }
             }
+            int tt = Array.IndexOf(args, "--type-test");
+            if (tt >= 0 && tt + 1 < args.Length)
+            {
+                // AirBubble.exe --type-test <utf-8 text file> [delay ms]: after the delay (default 3000), types the file's
+                // text into the focused window exactly like Bubble's type_text tool does. For testing without the AI.
+                int delay = 3000;
+                if (tt + 2 < args.Length) int.TryParse(args[tt + 2], out delay);
+                string text = File.ReadAllText(args[tt + 1], System.Text.Encoding.UTF8);
+                System.Threading.Thread.Sleep(Math.Max(0, delay));
+                XrealDesktop.PcViewer.Keys.Type(text);
+                return 0;
+            }
             int vt = Array.IndexOf(args, "--voice-test");
             if (vt >= 0)
             {

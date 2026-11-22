@@ -66,6 +66,9 @@ YOUR SCREENS IN AR
       or administrator windows, and after 25 unasked steps in one job he checks in. His card shows what he is
       doing and a ring shows where he clicks. Say "stop" or pop him to halt him at once.
       Everything he did, asked or was refused is listed in %APPDATA%\AirBubble\bubble_actions.log.
+      Longer text is pasted (Ctrl+V) rather than typed key by key, because some apps such as Windows 11 Notepad
+      drop letters when keys arrive fast; your clipboard is put back half a second later and his text is kept out
+      of clipboard history (Win+V).
     * Big jobs: he sends out up to 4 helper bubbles that work in parallel and report back in their own voices.
       He picks who goes (or ask for one by name): Pink (bow), Green (sprout), Gold (crown), Purple (wizard hat),
       Red (horns), Orange (propeller beanie), Teal (glasses). Say a name ("Teal, ...") to talk to that helper;

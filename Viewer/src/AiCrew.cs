@@ -948,14 +948,107 @@ Use them when you actually feel something, typically zero to two per reply (neve
         static IN K(ushort vk, ushort scan, uint flags) { var i = new IN { type = 1 }; i.u.ki = new KEYBDINPUT { wVk = vk, wScan = scan, dwFlags = flags, dwExtraInfo = InputHook.InjectTag }; return i; }
         static void Send(params IN[] i) { SendInput((uint)i.Length, i, Marshal.SizeOf(typeof(IN))); }
 
+        // Windows 11 Notepad (and other apps with a slow text pipeline) drops and auto-repeats characters when a key's
+        // press and release arrive together: measured 2026-11-22, down+up in one SendInput every 4-20 ms garbled the
+        // text, 8 ms between down and up was flaky, 15 ms was clean. Paste via the clipboard was always clean and is
+        // instant, so longer runs of text are pasted and only short ones are typed key by key.
+        const int KeyGapMs = 15;      // between a key's press and release, and after the release
+        const int PasteFrom = 6;      // characters in a line from which it is pasted instead of typed
+        const int PasteSettleMs = 500; // time the target gets to read the clipboard before it is restored
+
+        /// <summary>Types text into the focused window. Each line break presses Enter (the tool's contract).</summary>
         public static void Type(string text)
         {
-            foreach (char ch in text.Replace("\r\n", "\n"))
+            string[] lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            for (int i = 0; i < lines.Length; i++)
             {
-                if (ch == '\n') { Send(K(0x0D, 0, 0), K(0x0D, 0, KEYUP)); }
-                else Send(K(0, ch, UNICODE), K(0, ch, UNICODE | KEYUP));
-                Thread.Sleep(4);
+                if (i > 0) Tap(0x0D);
+                string s = lines[i];
+                if (s.Length == 0) continue;
+                if (s.Length < PasteFrom || !Paste(s)) TypeKeys(s);
             }
+        }
+
+        static void Tap(ushort vk)
+        {
+            Send(K(vk, 0, 0)); Thread.Sleep(KeyGapMs);
+            Send(K(vk, 0, KEYUP)); Thread.Sleep(KeyGapMs);
+        }
+
+        static void TypeKeys(string s)
+        {
+            for (int i = 0; i < s.Length; i++)
+            {
+                char ch = s[i];
+                if (char.IsHighSurrogate(ch) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
+                {
+                    // emoji etc.: both halves down, then both up, or the app sees two broken characters
+                    char lo = s[++i];
+                    Send(K(0, ch, UNICODE), K(0, lo, UNICODE)); Thread.Sleep(KeyGapMs);
+                    Send(K(0, ch, UNICODE | KEYUP), K(0, lo, UNICODE | KEYUP)); Thread.Sleep(KeyGapMs);
+                }
+                else
+                {
+                    Send(K(0, ch, UNICODE)); Thread.Sleep(KeyGapMs);
+                    Send(K(0, ch, UNICODE | KEYUP)); Thread.Sleep(KeyGapMs);
+                }
+            }
+        }
+
+        /// <summary>Pastes s with Ctrl+V and then puts the user's clipboard back. False if the clipboard couldn't be used.</summary>
+        static bool Paste(string s)
+        {
+            bool ok = false;
+            var t = new Thread(() => { try { ok = PasteSta(s); } catch { ok = false; } }) { IsBackground = true, Name = "bubble-paste" };
+            t.SetApartmentState(ApartmentState.STA);   // the clipboard needs an STA thread
+            t.Start();
+            if (!t.Join(10000)) Log.W("Bubble paste: timed out");
+            return ok;
+        }
+
+        static bool PasteSta(string s)
+        {
+            System.Windows.Forms.DataObject saved = null;
+            bool hadData = false;
+            try
+            {
+                var cur = System.Windows.Forms.Clipboard.GetDataObject();
+                if (cur != null && cur.GetFormats(false).Length > 0) { hadData = true; saved = CopyOf(cur); }
+            }
+            catch { return false; }                    // clipboard busy: type instead
+            if (hadData && saved == null) return false; // couldn't copy what's there: don't risk losing it
+
+            var d = new System.Windows.Forms.DataObject();
+            d.SetText(s, System.Windows.Forms.TextDataFormat.UnicodeText);
+            // keep Bubble's text out of Win+V clipboard history and cloud clipboard
+            d.SetData("ExcludeClipboardContentFromMonitorProcessing", false, new MemoryStream(new byte[4]));
+            try { System.Windows.Forms.Clipboard.SetDataObject(d, true, 10, 50); }
+            catch { return false; }
+
+            Send(K(0x11, 0, 0)); Thread.Sleep(KeyGapMs);   // Ctrl+V
+            Tap(0x56);
+            Send(K(0x11, 0, KEYUP));
+            Thread.Sleep(PasteSettleMs);
+
+            try
+            {
+                if (saved != null) System.Windows.Forms.Clipboard.SetDataObject(saved, true, 10, 50);
+                else System.Windows.Forms.Clipboard.Clear();
+            }
+            catch (Exception e) { Log.W("Bubble paste: couldn't restore the clipboard: " + e.Message); }
+            return true;
+        }
+
+        static System.Windows.Forms.DataObject CopyOf(System.Windows.Forms.IDataObject src)
+        {
+            var copy = new System.Windows.Forms.DataObject();
+            int n = 0;
+            foreach (string f in src.GetFormats(false))
+            {
+                try { object v = src.GetData(f, false); if (v != null) { copy.SetData(f, false, v); n++; } }
+                catch { }
+            }
+            return n > 0 ? copy : null;
         }
 
         static readonly Dictionary<string, ushort> s_Vk = new Dictionary<string, ushort>(StringComparer.OrdinalIgnoreCase)
@@ -977,8 +1070,8 @@ Use them when you actually feel something, typically zero to two per reply (neve
                 else if (p.Length >= 2 && (p[0] == 'f' || p[0] == 'F') && int.TryParse(p.Substring(1), out int_)) vks.Add((ushort)(0x70 + int_ - 1));
                 else return false;
             }
-            foreach (var v in vks) Send(K(v, 0, 0));
-            for (int i = vks.Count - 1; i >= 0; i--) Send(K(vks[i], 0, KEYUP));
+            foreach (var v in vks) { Send(K(v, 0, 0)); Thread.Sleep(KeyGapMs); }
+            for (int i = vks.Count - 1; i >= 0; i--) { Send(K(vks[i], 0, KEYUP)); Thread.Sleep(KeyGapMs); }
             return true;
         }
         static int int_;
