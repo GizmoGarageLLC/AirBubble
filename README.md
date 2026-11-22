@@ -16,8 +16,8 @@ No phone, no Beam, no Unity, no XREAL SDK. Just the glasses, a USB-C cable and y
 ## Features
 
 - **Screens that float.** Four by default, up to eight if you allow it in Settings. Every AR screen is a real
-  Windows display. Drag a title bar to move it, roll the wheel
-  to push or pull, drag an edge to resize, and use lock / minimize / maximize / close just like a normal window.
+  Windows display. Drag a title bar to move it, roll the wheel or click the title bar's Pull / Push buttons
+  (with a distance percentage, handy on a trackpad) to bring it closer or send it away, drag an edge to resize, and use lock / minimize / maximize / close just like a normal window.
 - **Head tracking.** 1000 Hz sensor tracking keeps screens still while you look around. Drift is learnt while you
   hold still and remembered between sessions.
 - **Your own mouse in AR.** The mouse drives a cursor in the glasses. Over a screen, it clicks, scrolls and drags
@@ -39,8 +39,9 @@ your head.
 
 - **"Bubble, what's on my calendar?"** He can look at a screen and point at what to click.
 - **"Bubble, remind me in 20 minutes to stretch."** Reminders and memory about you.
-- **Big jobs:** he sends up to four helper bubbles (Pink, Green, Gold, Purple, Red, Orange, Teal) that work in
-  parallel and report back in their own voices.
+- **Big jobs:** he sends up to four helper bubbles (Pink, Green, Gold, Purple, Red, Orange, Teal, White) that work
+  in parallel and report back in their own voices, each with its own personality: from Red, the selfish devil's
+  advocate, to White, the selfless one with a halo who does what is right.
 - **You choose how much he does on his own:** *Ask every time* (default), *Semi-autonomous* or *Fully
   autonomous*. In every mode he can't click Windows permission prompts, and risky actions always need a yes.
   Everything he does is logged in `%APPDATA%\AirBubble\bubble_actions.log`.

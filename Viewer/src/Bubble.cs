@@ -332,10 +332,21 @@ namespace XrealDesktop.PcViewer
         static readonly Color PopYellow = Color.FromArgb(255, 255, 224, 72);
 
         /// <summary>Helper colours (Tint = index + 1) and the thing each one wears. Bubble himself (Tint 0) wears nothing.</summary>
-        public static readonly string[] HelperColors = { "Pink", "Green", "Gold", "Purple", "Red", "Orange", "Teal" };
+        public static readonly string[] HelperColors = { "Pink", "Green", "Gold", "Purple", "Red", "Orange", "Teal", "White" };
         public static readonly string[] HelperLooks = { "a big pink bow", "a leafy sprout growing out of your head", "a little gold crown with gems",
-                                                        "a starry wizard hat", "tiny devil horns", "a propeller beanie", "round glasses" };
-        static readonly double[] s_TintHue = { -1, 325, 125, 45, 275, 2, 25, 175 };
+                                                        "a starry wizard hat", "tiny devil horns", "a propeller beanie", "round glasses", "a glowing golden halo" };
+        /// <summary>Each helper's character, in HelperColors order (the user's own descriptions, 2026-11-22).</summary>
+        public static readonly string[] HelperPersonalities = {
+            "sweet and caring, a cheerleader who is always encouraging",
+            "a calm nature lover, patient and grounded",
+            "proud and regal, and loves being in charge",
+            "a mysterious wizard, dreamy and creative",
+            "selfish and a devil's advocate: always argues the other side and asks what's in it for you",
+            "hyper and playful, always rushing ahead",
+            "nerdy and precise, loves facts and details",
+            "selfless, and always wants to do what is right" };
+        const int WhiteTint = 8;
+        static readonly double[] s_TintHue = { -1, 325, 125, 45, 275, 2, 25, 175, 220 };
 
         const int HN = 40;   // helper canvas: the 32 px body sits at (4, 8) with room for the hat on top
 
@@ -386,6 +397,8 @@ namespace XrealDesktop.PcViewer
                     Ring(b, 15.5, 17.5, 6.2); Ring(b, 24.5, 17.5, 6.2);
                     Art(b, 20, 16, "o"); Art(b, 20, 15, "o");
                     Art(b, 6, 16, "ooooo"); Art(b, 30, 16, "ooooo"); break;
+                case WhiteTint:   // White: a golden halo floating above the head
+                    Art(b, 12, 1, "...ooooooooooo...", ".ooCCCCCCCCCCCoo.", "oyyo.........oyyo", ".ooddddddddddddo.", "...ooooooooooo..."); break;
             }
             return b;
         }
@@ -405,7 +418,8 @@ namespace XrealDesktop.PcViewer
         {
             if (tint <= 0 || tint >= s_TintHue.Length) return c;
             float h = c.GetHue(), sat = c.GetSaturation(), l = c.GetBrightness();
-            h = (float)s_TintHue[tint]; sat = Math.Min(1f, sat * 1.1f + 0.1f);
+            if (tint == WhiteTint) { h = (float)s_TintHue[tint]; sat = 0.12f; l = l < 0.3f ? l + 0.12f : 0.55f + l * 0.45f; }   // pearly white, outline stays dark
+            else { h = (float)s_TintHue[tint]; sat = Math.Min(1f, sat * 1.1f + 0.1f); }
             // HSL -> RGB
             double q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
             Func<double, int> ch = t => { t = (t % 1 + 1) % 1; double v = t < 1 / 6.0 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3.0 ? p + (q - p) * (2 / 3.0 - t) * 6 : p; return (int)Math.Round(Math.Max(0, Math.Min(1, v)) * 255); };

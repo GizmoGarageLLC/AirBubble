@@ -35,7 +35,9 @@ YOUR SCREENS IN AR
   Every screen floats around you like a window. Your mouse becomes a cursor in the glasses:
   - Over a screen, the mouse works normally (click, scroll, drag windows - even from one screen to another).
   - Drag a screen's TITLE BAR to move it. Roll the scroll wheel over the title bar (or while dragging) to push it
-    away or pull it closer. Double-click the title bar to maximize.
+    away or pull it closer. On a trackpad, use the Pull / Push buttons on the title bar instead: each click moves
+    the screen 10% of the normal distance (Settings), and the percentage between them shows where it is now
+    (click the percentage to go back to 100%). Double-click the title bar to maximize.
   - Drag the left, right or bottom EDGE (it glows blue) to resize.
   - Title bar buttons: padlock = lock in place, - minimize, square maximize, X close.
   - Look down for the DOCK: "+ New screen", Arrange, Recenter, Settings, and minimized screens.
@@ -70,9 +72,17 @@ YOUR SCREENS IN AR
       drop letters when keys arrive fast; your clipboard is put back half a second later and his text is kept out
       of clipboard history (Win+V).
     * Big jobs: he sends out up to 4 helper bubbles that work in parallel and report back in their own voices.
-      He picks who goes (or ask for one by name): Pink (bow), Green (sprout), Gold (crown), Purple (wizard hat),
-      Red (horns), Orange (propeller beanie), Teal (glasses). Say a name ("Teal, ...") to talk to that helper;
-      click a helper to pop (dismiss) it.
+      He picks who goes (or ask for one by name), and each has a personality:
+        Pink (bow): sweet, caring cheerleader, always encouraging
+        Green (sprout): calm nature lover, patient and grounded
+        Gold (crown): proud and regal, loves being in charge
+        Purple (wizard hat): mysterious wizard, dreamy and creative
+        Red (horns): selfish, the devil's advocate
+        Orange (propeller beanie): hyper and playful, always rushing ahead
+        Teal (glasses): nerdy and precise, loves facts and details
+        White (halo): selfless, does what is "right"
+      Personalities change how they talk, not how carefully they work. Say a name ("Teal, ...") to talk to that
+      helper; click a helper to pop (dismiss) it.
     * Click Bubble to pop him (he stops talking at once). With his AI on he only comes back when you say "Bubble".
       Bubbles bounce off each other.
     * Bubbles hang around the edges of your screens, within easy reach, and hover gently in one spot. Move the

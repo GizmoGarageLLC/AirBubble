@@ -48,7 +48,7 @@ namespace XrealDesktop.PcViewer
             return t > 0;
         }
 
-        public enum Part { None, Content, Title, Lock, Minimize, Maximize, Close, EdgeL, EdgeR, EdgeT, EdgeB, CornerTL, CornerTR, CornerBL, CornerBR }
+        public enum Part { None, Content, Title, Lock, Minimize, Maximize, Close, Pull, DistPct, Push, EdgeL, EdgeR, EdgeT, EdgeB, CornerTL, CornerTR, CornerBL, CornerBR }
 
         /// <summary>Which part of this window a local point is on (content uv returned for Content).</summary>
         public Part HitPart(double lx, double ly, out double u, out double v)
@@ -62,6 +62,10 @@ namespace XrealDesktop.PcViewer
                 if (lx >= w / 2 - T) return Part.Close;
                 if (lx >= w / 2 - 2 * T) return Part.Maximize;
                 if (lx >= w / 2 - 3 * T) return Part.Minimize;
+                double fromRight = (w / 2 - lx) / T;   // distance controls, laid out as in Chrome.TitleBar
+                if (fromRight >= Chrome.PushAt && fromRight < Chrome.PctAt) return Part.Push;
+                if (fromRight >= Chrome.PctAt && fromRight < Chrome.PullAt) return Part.DistPct;
+                if (fromRight >= Chrome.PullAt && fromRight < Chrome.DistEnd) return Part.Pull;
                 return Part.Title;
             }
             if (Math.Abs(lx) <= w / 2 && Math.Abs(ly) <= h / 2) return Part.Content;

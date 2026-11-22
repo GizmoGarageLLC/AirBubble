@@ -13,7 +13,11 @@ namespace XrealDesktop.PcViewer
     static class Chrome
     {
         public const int TitlePx = 64;                // title bar texture height; buttons are TitlePx squares
-        public enum TitleHit { None = -1, Lock = 0, Minimize = 1, Maximize = 2, Close = 3, Bar = 4 }
+        public enum TitleHit { None = -1, Lock = 0, Minimize = 1, Maximize = 2, Close = 3, Bar = 4, Pull = 5, DistPct = 6, Push = 7 }
+
+        // Distance controls left of the window buttons: [Pull][ 100% ][Push]. Positions are measured from the bar's
+        // right edge in title-bar heights (the three window buttons take 0-3). ScreenWin.HitPart uses the same numbers.
+        public const double PushAt = 3.25, PctAt = 4.25, PullAt = 5.85, DistEnd = 6.85;
 
         static readonly Color Bar = Color.FromArgb(235, 26, 30, 42), BarActive = Color.FromArgb(240, 34, 52, 84);
         static readonly Color Fg = Color.FromArgb(235, 238, 242, 250), FgDim = Color.FromArgb(200, 170, 180, 200);
@@ -35,10 +39,11 @@ namespace XrealDesktop.PcViewer
             return p;
         }
 
-        /// <summary>Title bar: [lock] title .......... [–][□][✕]. widthPx = TitlePx * (bar width / bar height).</summary>
-        public static Bitmap TitleBar(int widthPx, string title, bool locked, TitleHit hover, bool maximized, bool active)
+        /// <summary>Title bar: [lock] title .... [Pull][100%][Push] [–][□][✕]. widthPx = TitlePx * (bar width / bar height).
+        /// distPct: the screen's distance as a percentage of the default distance in Settings.</summary>
+        public static Bitmap TitleBar(int widthPx, string title, bool locked, TitleHit hover, bool maximized, bool active, int distPct)
         {
-            int w = Math.Max(TitlePx * 5, widthPx), h = TitlePx;
+            int w = Math.Max((int)(TitlePx * (DistEnd + 2)), widthPx), h = TitlePx;
             var b = new Bitmap(w, h, PixelFormat.Format32bppArgb);
             using (var g = G(b))
             {
@@ -67,6 +72,26 @@ namespace XrealDesktop.PcViewer
                     }
                 }
 
+                // distance: [Pull] 100% [Push] (Pull brings the screen closer, Push sends it farther away)
+                using (var fb = new Font("Segoe UI Semibold", h * 0.30f, FontStyle.Regular, GraphicsUnit.Pixel))
+                using (var fp = new Font("Segoe UI", h * 0.32f, FontStyle.Regular, GraphicsUnit.Pixel))
+                using (var tb = new SolidBrush(locked ? FgDim : Fg))
+                {
+                    var sfc = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    Func<double, double, RectangleF> cellAt = (from, to) => new RectangleF((float)(w - to * h), 0, (float)((to - from) * h), h);
+                    var pull = cellAt(PullAt, DistEnd); var pct = cellAt(PctAt, PullAt); var push = cellAt(PushAt, PctAt);
+                    foreach (var c in new[] { new { R = pull, Hit = TitleHit.Pull, Text = "Pull" }, new { R = push, Hit = TitleHit.Push, Text = "Push" } })
+                    {
+                        var inner = new RectangleF(c.R.X + 4, c.R.Y + 8, c.R.Width - 8, c.R.Height - 16);
+                        using (var bg = new SolidBrush(hover == c.Hit && !locked ? Hover : Color.FromArgb(255, 44, 50, 66)))
+                        using (var p = Rounded(inner, 10)) g.FillPath(bg, p);
+                        g.DrawString(c.Text, fb, tb, c.R, sfc);
+                    }
+                    if (hover == TitleHit.DistPct && !locked)
+                        using (var bg = new SolidBrush(Hover)) using (var p = Rounded(new RectangleF(pct.X + 4, pct.Y + 8, pct.Width - 8, pct.Height - 16), 10)) g.FillPath(bg, p);
+                    using (var pb = new SolidBrush(locked ? FgDim : Accent)) g.DrawString(distPct + "%", fp, pb, pct, sfc);
+                }
+
                 // lock checkbox (left)
                 var lc = new RectangleF(0, 0, h, h);
                 if (hover == TitleHit.Lock) using (var hb = new SolidBrush(Hover)) using (var p = Rounded(new RectangleF(4, 4, h - 8, h - 8), 10)) g.FillPath(hb, p);
@@ -76,7 +101,7 @@ namespace XrealDesktop.PcViewer
                 using (var f = new Font("Segoe UI Semibold", h * 0.36f, FontStyle.Regular, GraphicsUnit.Pixel))
                 using (var tb = new SolidBrush(Fg))
                 {
-                    var tr = new RectangleF(h + 6, 0, w - 4 * h - 12, h);
+                    var tr = new RectangleF(h + 6, 0, (float)(w - (DistEnd + 1) * h - 12), h);
                     var sf = new StringFormat { LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
                     g.DrawString(title, f, tb, tr, sf);
                 }

@@ -838,6 +838,7 @@ namespace XrealDesktop.PcViewer
                     if (s.Maximized) { s.Maximized = false; s.Width = s.SWidth; s.Dist = s.SDist; s.TitleStamp = null; }
                     break;
                 case ScreenWin.Part.Lock: case ScreenWin.Part.Minimize: case ScreenWin.Part.Maximize: case ScreenWin.Part.Close:
+                case ScreenWin.Part.Pull: case ScreenWin.Part.Push: case ScreenWin.Part.DistPct:
                     if (button == 0) { m_Mode = Mode.Press; m_PressId = h.Part + ":" + s.Key; m_Target = s; }
                     break;
                 default:
@@ -885,7 +886,8 @@ namespace XrealDesktop.PcViewer
         void OnWheel(int delta, bool horizontal)
         {
             m_Hover = HitTest();
-            if (m_Mode == Mode.Move || (m_Mode == Mode.Idle && m_Hover.S != null && m_Hover.Part == ScreenWin.Part.Title))
+            bool onBar = m_Hover.Part == ScreenWin.Part.Title || m_Hover.Part == ScreenWin.Part.Pull || m_Hover.Part == ScreenWin.Part.Push || m_Hover.Part == ScreenWin.Part.DistPct;
+            if (m_Mode == Mode.Move || (m_Mode == Mode.Idle && m_Hover.S != null && onBar))
             {
                 var s = m_Mode == Mode.Move ? m_Target : m_Hover.S;
                 if (s.Locked || horizontal) return;
@@ -924,6 +926,29 @@ namespace XrealDesktop.PcViewer
             else if (id.StartsWith("Minimize:")) { s.Minimized = true; m_DockStamp = null; Ui(SaveLayout); }
             else if (id.StartsWith("Maximize:")) ToggleMaximize(s);
             else if (id.StartsWith("Close:")) Ui(() => CloseScreen(s));
+            else if (id.StartsWith("Pull:")) StepDistance(s, -10);
+            else if (id.StartsWith("Push:")) StepDistance(s, +10);
+            else if (id.StartsWith("DistPct:")) StepDistance(s, 0);
+        }
+
+        /// <summary>The screen's distance as a percentage of the default distance (Settings), as its title bar shows it.</summary>
+        int DistPercent(ScreenWin s)
+        {
+            double d0 = m_Settings.Distance > 0.2 ? m_Settings.Distance : 1.6;
+            return (int)Math.Round(s.Dist / d0 * 100);
+        }
+
+        /// <summary>Title-bar Pull/Push (for trackpads; the mouse wheel on the bar still works): steps the distance by
+        /// stepPct of the default, snapped to whole steps. 0 = back to 100%.</summary>
+        void StepDistance(ScreenWin s, int stepPct)
+        {
+            if (s.Locked) { Toast("Screen is locked (click the padlock to unlock)"); return; }
+            double d0 = m_Settings.Distance > 0.2 ? m_Settings.Distance : 1.6;
+            int pct = stepPct == 0 ? 100 : (int)(Math.Round(DistPercent(s) / 10.0) * 10) + stepPct;
+            if (s.Maximized) { s.Maximized = false; s.Width = s.SWidth; }
+            s.Dist = Clamp(d0 * pct / 100.0, 0.4, 6);
+            s.TitleStamp = null;
+            Ui(SaveLayout);
         }
 
         // =====================================================================================================
@@ -1096,13 +1121,16 @@ namespace XrealDesktop.PcViewer
             if (hp == ScreenWin.Part.Lock) th = Chrome.TitleHit.Lock; else if (hp == ScreenWin.Part.Minimize) th = Chrome.TitleHit.Minimize;
             else if (hp == ScreenWin.Part.Maximize) th = Chrome.TitleHit.Maximize; else if (hp == ScreenWin.Part.Close) th = Chrome.TitleHit.Close;
             else if (hp == ScreenWin.Part.Title) th = Chrome.TitleHit.Bar;
+            else if (hp == ScreenWin.Part.Pull) th = Chrome.TitleHit.Pull; else if (hp == ScreenWin.Part.Push) th = Chrome.TitleHit.Push;
+            else if (hp == ScreenWin.Part.DistPct) th = Chrome.TitleHit.DistPct;
             bool active = m_Target == s && m_Mode == Mode.Move;
             int pxW = (int)(Chrome.TitlePx * s.Width / s.TitleH);
+            int pct = DistPercent(s);
             string res = s.Mon != null ? s.Mon.Bounds.Width + "×" + s.Mon.Bounds.Height : "";
-            string stamp = s.Title + "|" + s.Locked + "|" + th + "|" + s.Maximized + "|" + active + "|" + pxW / 32;
+            string stamp = s.Title + "|" + s.Locked + "|" + th + "|" + s.Maximized + "|" + active + "|" + pxW / 32 + "|" + pct;
             if (stamp == s.TitleStamp && s.TitleTex != 0) return;
             s.TitleStamp = stamp; s.TitlePxW = pxW;
-            using (var bmp = Chrome.TitleBar(pxW, s.Title + "   " + res, s.Locked, th, s.Maximized, active)) s.TitleTex = Chrome.Upload(bmp, s.TitleTex);
+            using (var bmp = Chrome.TitleBar(pxW, s.Title + "   " + res, s.Locked, th, s.Maximized, active, pct)) s.TitleTex = Chrome.Upload(bmp, s.TitleTex);
         }
 
         void UpdateDock(List<ScreenWin> screens)

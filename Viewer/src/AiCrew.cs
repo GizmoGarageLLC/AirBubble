@@ -495,7 +495,7 @@ What you can do (tools):
 - click, type_text and press_keys to operate the PC. These only work if the user turned on app control in Settings. Prefer pointing and explaining when the user is just asking how.
 - remember / forget to keep short facts about the user between conversations; set_reminder, list_reminders, cancel_reminder for reminders (Bubble says them out loud when due).
 - web_search and web_fetch for anything current or factual you're unsure of.
-- spawn_helpers: for bigger research or multi-part jobs, spawn up to four helper bubbles at once that each work on one sub-task in parallel and report back by themselves. Each helper is named after its own colour, and you choose who goes on which job (have fun matching them, or honour what the user asks for). The helpers: " + HelperRoster() + @". Tell the user who is doing what, by name (""Pink is checking flights, Teal has the hotels""). Their reports arrive in later messages; the user can also talk to a helper directly by saying its name. dismiss_helper pops one.
+- spawn_helpers: for bigger research or multi-part jobs, spawn up to four helper bubbles at once that each work on one sub-task in parallel and report back by themselves. Each helper is named after its own colour and has its own personality, and you choose who goes on which job (match the job to the personality, or honour what the user asks for; Red and White together make a good pair for weighing up both sides of a decision). The helpers: " + HelperRoster() + @". Tell the user who is doing what, by name (""Pink is checking flights, Teal has the hotels""). Their reports arrive in later messages; the user can also talk to a helper directly by saying its name. dismiss_helper pops one.
   How to talk about them: call them ""my helpers"", ""the helper bubbles"", ""the crew"" or use their names. Never say ""colored helpers"", ""the colored ones"" or anything like it, and don't describe them as a group by colour; out loud that sounds bad.
 
 " + AutonomyPrompt(m_Settings.BubbleAutonomy) + @"
@@ -534,7 +534,10 @@ Working on your own: look at the screen first, do one step, then look again to c
 
         static object HelperPrompt(CrewAgent a)
         {
-            return "You are " + a.Name + ", a little " + a.Name.ToLowerInvariant() + " helper bubble wearing " + Bubble.HelperLooks[Math.Max(0, a.Tint - 1)] + ", that Bubble (a cheerful floating soap bubble in the user's AR glasses) spawned to do one job: " + a.Task + "\n\n" +
+            int i = Math.Max(0, Math.Min(a.Tint - 1, Bubble.HelperPersonalities.Length - 1));
+            return "You are " + a.Name + ", a little " + a.Name.ToLowerInvariant() + " helper bubble wearing " + Bubble.HelperLooks[i] + ", that Bubble (a cheerful floating soap bubble in the user's AR glasses) spawned to do one job: " + a.Task + "\n\n" +
+                   "Your personality: you are " + Bubble.HelperPersonalities[i] + ". Let it colour how you talk, what you notice and the opinions you give, and keep it fun. " +
+                   "It is a character, not a rule change: you still do the job properly and honestly, never lie or mislead the user, and never act against their interests or their safety.\n\n" +
                    "Use web_search and web_fetch as needed and be accurate. When you're done, reply in exactly this shape:\n" +
                    "First line: one or two short, upbeat spoken sentences with the key result (plain words, no markdown or URLs; it's read aloud).\n" +
                    "Then a line 'DETAILS:' followed by the fuller findings (plain text, concise, include source names).\n" +
@@ -545,7 +548,8 @@ Working on your own: look at the screen first, do one step, then look again to c
         static string HelperRoster()
         {
             var parts = new List<string>();
-            for (int i = 0; i < s_HelperNames.Length; i++) parts.Add(s_HelperNames[i] + " (wears " + Bubble.HelperLooks[i].Replace("your head", "its head") + ")");
+            for (int i = 0; i < s_HelperNames.Length; i++)
+                parts.Add(s_HelperNames[i] + " (wears " + Bubble.HelperLooks[i].Replace("your head", "its head") + "; " + Bubble.HelperPersonalities[i] + ")");
             return string.Join(", ", parts);
         }
 
@@ -812,6 +816,7 @@ Use them when you actually feel something, typically zero to two per reply (neve
         {
             new[] { "Jessica", "Laura", "Lily" }, new[] { "Brian", "Daniel", "George" }, new[] { "Charlotte", "Alice", "Matilda" }, new[] { "Callum", "Roger", "River" },
             new[] { "Harry", "Charlie", "Adam" }, new[] { "Laura", "Hope", "Bella" }, new[] { "Eric", "Chris", "Sarah" },
+            new[] { "Matilda", "Alice", "Sarah" },   // White
         };
 
         /// <summary>One helper per (task, wanted colour or null).</summary>
