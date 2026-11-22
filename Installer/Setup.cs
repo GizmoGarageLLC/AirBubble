@@ -24,15 +24,15 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyProduct("AirBubble")]
 [assembly: System.Reflection.AssemblyCompany("Independent build (not affiliated with XREAL)")]
 [assembly: System.Reflection.AssemblyCopyright("Independent build")]
-[assembly: System.Reflection.AssemblyVersion("1.7.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.7.3.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.7.3")]
+[assembly: System.Reflection.AssemblyVersion("1.7.4.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.7.4.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.7.4")]
 namespace XrealDesktop.Setup
 {
     static class Product
     {
         public const string Name = "AirBubble";
-        public const string Version = "1.7.3";
+        public const string Version = "1.7.4";
         public const string FolderName = "AirBubble";
         public const string ExeName = "AirBubble.exe";
         public const string UninstallerName = "Uninstall.exe";

@@ -1,8 +1,8 @@
-AirBubble - version 1.7.3
+AirBubble - version 1.7.4
 =========================
 
-File:      AirBubbleSetup.exe (724,488 bytes)
-SHA-256:   BF89A429287713076F81EA60B745136B182F2B160CDC845CB5B73D97CE2F74D2
+File:      AirBubbleSetup.exe (730,632 bytes)
+SHA-256:   44AEE7EC1A4F9853F09221B201FBBD42ACC118535884E8E4D72367A7C65F6E35
 Signed by: CN=PC Viewer for XREAL glasses (independent build), O=Self-signed
            (self-signed code-signing certificate, thumbprint 9B59D20322D5C17AF5297F692E4B1EB5D6BAFAEF, valid until 2031-11-11)
 
@@ -22,6 +22,16 @@ ABOUT THE SIGNATURE (please read)
   certificate (or free open-source signing such as SignPath Foundation) removes that everywhere.
   On PCs you own you can make Windows trust it: run Trust-Publisher.cmd once (admin). Undo: Trust-Publisher.cmd remove
   Microsoft Defender scan of the installer, the app and the driver: no threats found.
+
+WHAT'S NEW IN 1.7.4
+  - Pull / Push on every screen's title bar, for trackpads: each click moves the screen 10% of the normal distance,
+    the percentage between them shows where it is (click it to go back to 100%). The scroll wheel still works.
+  - A new helper: White, a pearly white bubble with a golden halo.
+  - The helpers have personalities: Pink the caring cheerleader, Green the calm nature lover, Gold proud and in
+    charge, Purple the dreamy wizard, Red the selfish devil's advocate, Orange hyper and playful, Teal nerdy and
+    precise, White selfless and doing what is right. They change how the helpers talk, not how carefully they work.
+  Tested on the build PC: build, sprite and title-bar renders, 1.7.3 -> 1.7.4 silent update.
+  Not yet tested: the new buttons and helpers in the glasses.
 
 WHAT'S NEW IN 1.7.3
   - Bubble types cleanly: in Windows 11 Notepad (and other slow apps) his typing used to drop and repeat letters.

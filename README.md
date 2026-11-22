@@ -1,6 +1,6 @@
 # AirBubble
 
-**Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses.** v1.7.3
+**Floating PC screens and an AI buddy named Bubble, for XREAL Air glasses.** v1.7.4
 
 Plug your XREAL Air straight into a Windows PC and your desktop turns into a room full of screens. Four (or up
 to eight) full Windows displays float around you, stay put when you turn your head, and work like windows: move them,
